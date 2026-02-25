@@ -6,6 +6,7 @@ from api.models import db, User
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
 from sqlalchemy import select
+from flask_jwt_extended import create_access_token
 
 api = Blueprint('api', __name__)
 
@@ -42,3 +43,25 @@ def signup():
     db.session.commit()
 
     return jsonify({"msg":"User create succesfully"}), 201
+
+@api.route("/login", methods=["POST"])
+def login():
+    data= request.get_json()
+    email = data.get("email")
+    password = data.get("password")
+
+    if not email or not password:
+        return jsonify({"error": "Required Email and password"}), 400
+    
+    user_exist= db.session.execute(select(User).where(User.email == email)).scalar_one_or_none()
+
+    if user_exist is None:
+        return jsonify({"error": "User not found"}), 404
+    
+    if user_exist.check_password(password):
+        access_token = create_access_token(identity=str(user_exist.id))
+        return jsonify({'msg':'Login successfully',
+                        'token': access_token,
+                        'user': user_exist.serialize()}), 200,
+                        
+    return jsonify({'error':'Invalid email or password'}), 401
