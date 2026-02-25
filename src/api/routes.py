@@ -5,6 +5,7 @@ from flask import Flask, request, jsonify, url_for, Blueprint
 from api.models import db, User
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
+from sqlalchemy import select
 
 api = Blueprint('api', __name__)
 
@@ -20,3 +21,24 @@ def handle_hello():
     }
 
     return jsonify(response_body), 200
+
+@api.route("/signup", methods=['POST'])
+def signup():
+    data = request.get_json()
+    email= data.get("email")
+    password = data.get("password")
+
+    if not email or not password:
+        return jsonify({"error": "Required Email and password"}), 400
+    
+    user_exist= db.session.execute(select(User).where(User.email == email)).scalar_one_or_none()
+
+    if user_exist:
+        return jsonify({"error":"Email already exist"}), 400
+    
+    new_user = User(email = email)
+    new_user.set_password(password)
+    db.session.add(new_user)
+    db.session.commit()
+
+    return jsonify({"msg":"User create succesfully"}), 201
