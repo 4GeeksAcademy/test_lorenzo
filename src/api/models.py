@@ -30,6 +30,6 @@ class User(db.Model):
             "last_name": self.last_name,
             "phone": self.phone,
             "address": self.address,
-            "is_active": self.is_active
+            # "is_active": self.is_active
             # do not serialize the password, its a security breach
         }
