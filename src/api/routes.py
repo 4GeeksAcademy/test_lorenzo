@@ -111,30 +111,25 @@ def create_spot():
 
     required_fields = ["name", "category", "latitude", "longitude"]
     for field in required_fields:
-        if field not in data:
+        if not data.get(field):
             return jsonify({"msg": f"El campo {field} es obligatorio"}), 400
 
-    try:
-        new_spot = Post_spot(
-            user_id=user_id,
-            name=data.get("name"),
-            category=data.get("category"),
-            description=data.get("description"),
-            latitude=float(data.get("latitude")),
-            longitude=float(data.get("longitude")),
-            rating=data.get("rating"),
-            is_sleepable=data.get("is_sleepable", True),
-            has_water=data.get("has_water", False),
-            has_waste_dump=data.get("has_waste_dump", False)
-        )
+    new_spot = Post_spot(
+        user_id=user_id,
+        name=data.get("name"),
+        category=data.get("category"),
+        description=data.get("description"),
+        latitude=float(data.get("latitude")),
+        longitude=float(data.get("longitude")),
+        rating=data.get("rating"),
+        is_sleepable=data.get("is_sleepable", True),
+        has_water=data.get("has_water", False),
+        has_waste_dump=data.get("has_waste_dump", False)
+    )
 
-        db.session.add(new_spot)
-        db.session.commit()
-        return jsonify(new_spot.serialize()), 201
-
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"msg": "Error al guardar el spot", "error": str(e)}), 500
+    db.session.add(new_spot)
+    db.session.commit()
+    return jsonify(new_spot.serialize()), 201
 
 
 @api.route("/spots/<int:spot_id>", methods=["PUT"])
@@ -195,8 +190,8 @@ def delete_spot(spot_id):
         return jsonify({"msg": "No tienes permiso para borrar este spot. No eres el dueño"}), 403
 
     db.session.delete(spot)
-    db.session.commit() 
-    
+    db.session.commit()
+
     return jsonify({"msg": "Spot eliminado correctamente"}), 200
 
-#-------FIN DE RUTAS SPOTS-------
+# -------FIN DE RUTAS SPOTS-------
