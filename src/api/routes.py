@@ -122,7 +122,7 @@ def create_spot():
             description=data.get("description"),
             latitude=float(data.get("latitude")),
             longitude=float(data.get("longitude")),
-            rating=data.get("rating"),  # Opcional
+            rating=data.get("rating"),
             is_sleepable=data.get("is_sleepable", True),
             has_water=data.get("has_water", False),
             has_waste_dump=data.get("has_waste_dump", False)
