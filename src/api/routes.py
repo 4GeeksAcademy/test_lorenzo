@@ -75,7 +75,7 @@ def get_profile():
     return jsonify(user_exist.serialize())
 
 
-@api.route("/edit", methods=["PUT"])
+@api.route("/edit", methods =["PUT"])
 @jwt_required()
 def edit_profile():
 
