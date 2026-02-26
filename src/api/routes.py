@@ -13,16 +13,7 @@ api = Blueprint('api', __name__)
 # Allow CORS requests to this API
 CORS(api)
 
-
-@api.route('/hello', methods=['POST', 'GET'])
-def handle_hello():
-
-    response_body = {
-        "message": "Hello! I'm a message that came from the backend, check the network tab on the google inspector and you will see the GET request"
-    }
-
-    return jsonify(response_body), 200
-
+# -------------------RUTAS MODELO USER---------------------
 
 @api.route("/signup", methods=['POST'])
 def signup():
@@ -70,8 +61,48 @@ def login():
 
     return jsonify({'error': 'Invalid email or password'}), 401
 
-# -------RUTAS SPOTS--------
 
+@api.route("/profile", methods=["GET"])
+@jwt_required()
+def get_profile():
+
+    user_id = get_jwt_identity()
+    user_exist = db.session.get(User, int(user_id))
+
+    if not user_exist:
+        return jsonify({'error': 'Not found'}), 400
+    return jsonify(user_exist.serialize())
+
+
+@api.route("/edit", methods =["PUT"])
+@jwt_required()
+def edit_profile():
+
+    user_id = get_jwt_identity()
+    user = db.session.get(User, int(user_id))
+
+    data = request.get_json()
+    new_password = data.get("password")
+    new_name = data.get("name")
+    new_last_name = data.get("last_name")
+    new_phone = data.get("phone")
+    new_address = data.get("address")
+
+    if new_password:
+        user.set_password(new_password)
+    if new_name:
+        user.name = new_name
+    if new_last_name:
+        user.last_name = new_last_name
+    if new_phone:
+        user.phone = new_phone
+    if new_address:
+        user.address = new_address
+
+    db.session.commit()
+    return jsonify({'msg': 'Save change successfully'}), 201
+
+# -------------------RUTAS MODELO SPOT---------------------
 
 @api.route("/spots", methods=["GET"])
 def get_all_spots():
