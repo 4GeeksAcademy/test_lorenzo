@@ -2,6 +2,8 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import String, Boolean, Numeric, Integer, ForeignKey, Float, Text
 from sqlalchemy.orm import Mapped, mapped_column
 from flask_bcrypt import generate_password_hash, check_password_hash
+from datetime import date
+from decimal import Decimal
 
 
 db = SQLAlchemy()
@@ -111,3 +113,25 @@ class Media_spot(db.Model):
             "url": self.url,
             "media_type": self.media_type,
         }
+
+
+class Booking(db.Model):
+    booking_id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
+    car_id: Mapped[int] = mapped_column(ForeignKey("vehicle.car_id"), nullable=False)
+    start_date: Mapped[date] = mapped_column(db.Date, nullable=False)
+    end_date: Mapped[date] = mapped_column(db.Date, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), default="pending") # pending, confirmed, cancelled
+    total_price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
+
+    def serialize(self):
+        return {
+            "booking_id": self.booking_id,
+            "user_id": self.user_id,
+            "car_id": self.car_id,
+            "start_date": self.start_date.isoformat(), # isoformat lo convierte en "AAAA-MM-DD"
+            "end_date": self.end_date.isoformat(),
+            "status": self.status,
+            "total_price": float(self.total_price) # aqui se pasa a float para que el JSON lo acepte 
+        }
+    
