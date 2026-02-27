@@ -1,14 +1,16 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import String, Boolean, Integer
+from sqlalchemy import String, Boolean, Numeric, Integer, ForeignKey, Float, Text
 from sqlalchemy.orm import Mapped, mapped_column
 from flask_bcrypt import generate_password_hash, check_password_hash
 
 
 db = SQLAlchemy()
 
+
 class User(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
-    email: Mapped[str] = mapped_column(String(120), unique=True, nullable=False)
+    email: Mapped[str] = mapped_column(
+        String(120), unique=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(nullable=False)
     name: Mapped[str] = mapped_column(String(120), nullable=True)
     last_name: Mapped[str] = mapped_column(String(120), nullable=True)
@@ -61,3 +63,51 @@ class Vehicle(db.Model):
     
 # Modelo de Media_vehicle
 
+
+class Post_spot(db.Model):
+    spot_id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
+    name: Mapped[str] = mapped_column(String(120), nullable=True)
+    category: Mapped[str] = mapped_column(String(50), nullable=True)
+    description: Mapped[str] = mapped_column(Text, nullable=True)
+    longitude: Mapped[float] = mapped_column(
+        Numeric(precision=9, scale=6), nullable=True)
+    latitude: Mapped[float] = mapped_column(
+        Numeric(precision=9, scale=6), nullable=True)
+    rating: Mapped[float] = mapped_column(
+        Numeric(precision=3, scale=2), nullable=True)
+    is_sleepable: Mapped[bool] = mapped_column(
+        Boolean, default=True, nullable=True)
+    has_water: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=True)
+    has_waste_dump: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=True)
+
+    def serialize(self):
+        return {
+            "spot_id": self.spot_id,
+            "user_id": self.user_id,
+            "name": self.name,
+            "category": self.category,
+            "description": self.description,
+            "longitude": float(self.longitude) if self.longitude is not None else 0.0,
+            "latitude": float(self.latitude) if self.latitude is not None else 0.0,
+            "rating": float(self.rating) if self.rating is not None else None,
+            "is_sleepable": self.is_sleepable,
+            "has_water": self.has_water,
+            "has_waste_dump": self.has_waste_dump
+        }
+
+class Media_spot(db.Model):
+    media_id: Mapped[int] = mapped_column(primary_key=True)
+    post_id: Mapped[int] = mapped_column(ForeignKey("post_spot.spot_id"), nullable=False)
+    url: Mapped[str] = mapped_column(String(255), nullable=False)
+    media_type: Mapped[str] = mapped_column(String(50), nullable=True) 
+
+    def serialize(self):
+        return {
+            "media_id": self.media_id,
+            "post_id": self.post_id,
+            "url": self.url,
+            "media_type": self.media_type,
+        }
