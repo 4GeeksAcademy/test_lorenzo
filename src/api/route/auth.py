@@ -1,6 +1,3 @@
-"""
-This module takes care of starting the API Server, Loading the DB and Adding the endpoints
-"""
 from flask import Flask, request, jsonify, url_for, Blueprint
 from api.models import db, User
 from api.utils import generate_sitemap, APIException
@@ -10,10 +7,7 @@ from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identi
 
 auth = Blueprint('auth', __name__)
 
-# Allow CORS requests to this API
 CORS(auth)
-
-# -------------------RUTAS MODELO USER---------------------
 
 @auth.route("/signup", methods=['POST'])
 def signup():

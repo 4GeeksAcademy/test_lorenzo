@@ -9,6 +9,8 @@ from api.utils import APIException, generate_sitemap
 from api.models import db
 from api.routes import api
 from api.route.auth import auth
+from api.route.spot import spot
+from api.route.van import van
 from api.admin import setup_admin
 from api.commands import setup_commands
 from flask_jwt_extended import JWTManager
@@ -45,6 +47,8 @@ setup_commands(app)
 app.register_blueprint(api, url_prefix='/api')
 
 app.register_blueprint(auth, url_prefix='/auth')
+app.register_blueprint(spot, url_prefix='/spot')
+app.register_blueprint(van, url_prefix='/van')
 # Handle/serialize errors like a JSON object
 
 
