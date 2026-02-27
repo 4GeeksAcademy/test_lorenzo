@@ -36,6 +36,33 @@ class User(db.Model):
             # do not serialize the password, its a security breach
         }
 
+class Vehicle(db.Model):
+    car_id: Mapped[int] = mapped_column(primary_key=True)
+    brand: Mapped[str] = mapped_column(String(120), nullable=False)
+    model: Mapped[str] = mapped_column(String(120), nullable=False)
+    description: Mapped[str] = mapped_column(String(500), nullable=False)
+    capacity: Mapped[int] = mapped_column(Integer, nullable=False)
+    type_vehicle: Mapped[str] = mapped_column(String(120), nullable=False)
+    price_per_day: Mapped[int] = mapped_column(Integer, nullable=False)
+    images: Mapped[str] = mapped_column(String(600), nullable=False)
+    available: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+   
+
+    def serialize(self):
+        return {
+            "car_id": self.car_id,
+            "brand":self.brand,
+            "model": self.model,
+            "description": self.description,
+            "capacity": self.capacity,
+            "type_vehicle": self.type_vehicle,
+            "price_per_day": self.price_per_day,
+            "images": self.images,
+            "available": self.available
+        }
+    
+# Modelo de Media_vehicle
+
 
 class Post_spot(db.Model):
     spot_id: Mapped[int] = mapped_column(primary_key=True)
