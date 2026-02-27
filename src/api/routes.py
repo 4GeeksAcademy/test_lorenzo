@@ -15,7 +15,6 @@ CORS(api)
 
 # -------------------RUTAS MODELO USER---------------------
 
-
 @api.route("/signup", methods=['POST'])
 def signup():
     data = request.get_json()
@@ -103,10 +102,6 @@ def edit_profile():
     db.session.commit()
     return jsonify({'msg': 'Save change successfully'}), 201
 
-
-
-
-
 # -------------------RUTAS MODELO SPOT---------------------
 
 @api.route("/spots", methods=["GET"])
@@ -124,49 +119,16 @@ def get_spot_by_id(spot_id):
 
     data = spot.serialize()
     user = User.query.get(spot.user_id)
-    
+
     if user:
-        data["userName"] = user.name  
+        data["userName"] = user.name
     else:
         data["userName"] = "Usuario desconocido"
 
-    # DESCOMENTAR CUANDO SE CREE LA TABLA MEDIA SPOT 
+    # DESCOMENTAR CUANDO SE CREE LA TABLA MEDIA SPOT
     # media_spot = Media_Spot.query.filter_by(post_id=spot_id).all()
     # data["media"] = [item.serialize() for item in media_spot]
     return jsonify(data), 200
-
-
-
-@api.route("/spots/<int:spot_id>", methods=["PUT"])
-@jwt_required() 
-def update_spot(spot_id):
-    current_user_id = get_jwt_identity()
-    data = request.get_json()
-    spot = Post_spot.query.get(spot_id)
-
-    if spot is None:
-        return jsonify({"msg": "El lugar solicitado no existe"}), 404
-
-    if str(spot.user_id) != str(current_user_id):
-        return jsonify({"msg": "No tienes permiso para editar este spot"}), 403
-    
-    if "latitud" in data:
-        try:
-            spot.latitud = float(data["latitud"])
-        except (ValueError, TypeError):
-            return jsonify({"msg": "Latitud inválida, debe ser un número"}), 400
-
-    if "longitud" in data:
-        try:
-            spot.longitud = float(data["longitud"])
-        except (ValueError, TypeError):
-            return jsonify({"msg": "Longitud inválida, debe ser un número"}), 400
-
-    if "valoracion" in data:
-        spot.valoracion = data["valoracion"]
-
-    db.session.commit()
-    return jsonify(spot.serialize()), 200
 
 
 @api.route("/spots", methods=["POST"])
@@ -177,28 +139,74 @@ def create_spot():
 
     if not data:
         return jsonify({"msg": "No se han enviado datos"}), 400
-    
-    if "latitud" not in data or "longitud" not in data:
-        return jsonify({"msg": "La latitud y longitud son obligatorias"}), 400
 
-        #FALTA NOMBRE-DESCRIPCION-CATEGORIA-IMAGEN -- HAY QUE VER LO QUE VA EN LA TABLA MEDIOS
-        
-    try:
-        new_spot = Post_spot(
-            latitud=float(data.get("latitud")),
-            longitud=float(data.get("longitud")),
-            valoracion=data.get("valoracion", 0.0), 
-            user_id=user_id 
-        )
+    required_fields = ["name", "category", "latitude", "longitude"]
+    for field in required_fields:
+        if not data.get(field):
+            return jsonify({"msg": f"El campo {field} es obligatorio"}), 400
 
-        db.session.add(new_spot)
-        db.session.commit()
-        return jsonify(new_spot.serialize()), 201
+    new_spot = Post_spot(
+        user_id=user_id,
+        name=data.get("name"),
+        category=data.get("category"),
+        description=data.get("description"),
+        latitude=float(data.get("latitude")),
+        longitude=float(data.get("longitude")),
+        rating=data.get("rating"),
+        is_sleepable=data.get("is_sleepable", True),
+        has_water=data.get("has_water", False),
+        has_waste_dump=data.get("has_waste_dump", False)
+    )
 
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({"msg": "Error al guardar el spot", "error": str(e)}), 500
-    
+    db.session.add(new_spot)
+    db.session.commit()
+    return jsonify(new_spot.serialize()), 201
+
+
+@api.route("/spots/<int:spot_id>", methods=["PUT"])
+@jwt_required()
+def update_spot(spot_id):
+    current_user_id = get_jwt_identity()
+    data = request.get_json()
+    spot = Post_spot.query.get(spot_id)
+
+    if spot is None:
+        return jsonify({"msg": "El lugar solicitado no existe"}), 404
+
+    if str(spot.user_id) != str(current_user_id):
+        return jsonify({"msg": "No tienes permiso para editar este spot"}), 403
+
+    if "name" in data:
+        spot.name = data["name"]
+    if "category" in data:
+        spot.category = data["category"]
+    if "description" in data:
+        spot.description = data["description"]
+
+    if "latitude" in data:
+        try:
+            spot.latitude = float(data["latitude"])
+        except (ValueError, TypeError):
+            return jsonify({"msg": "Latitude inválida, debe ser un número"}), 400
+
+    if "longitude" in data:
+        try:
+            spot.longitude = float(data["longitude"])
+        except (ValueError, TypeError):
+            return jsonify({"msg": "Longitude inválida, debe ser un número"}), 400
+
+    if "rating" in data:
+        spot.rating = data["rating"]
+    if "is_sleepable" in data:
+        spot.is_sleepable = data["is_sleepable"]
+    if "has_water" in data:
+        spot.has_water = data["has_water"]
+    if "has_waste_dump" in data:
+        spot.has_waste_dump = data["has_waste_dump"]
+
+    db.session.commit()
+    return jsonify(spot.serialize()), 200
+
 
 @api.route("/spots/<int:spot_id>", methods=["DELETE"])
 @jwt_required()
@@ -209,12 +217,12 @@ def delete_spot(spot_id):
     if spot is None:
         return jsonify({"msg": "El spot no existe"}), 404
 
-
     if str(spot.user_id) != str(current_user_id):
         return jsonify({"msg": "No tienes permiso para borrar este spot. No eres el dueño"}), 403
-  
+
     db.session.delete(spot)
     db.session.commit()
-        
-    return jsonify({"msg": "Spot eliminado exitosamente"}), 200
 
+    return jsonify({"msg": "Spot eliminado correctamente"}), 200
+
+# -------FIN DE RUTAS SPOTS-------
