@@ -24,6 +24,7 @@ def signup():
     if not email or not password:
         return jsonify({"error": "Required Email and password"}), 400
 
+
     user_exist = db.session.execute(select(User).where(
         User.email == email)).scalar_one_or_none()
 
