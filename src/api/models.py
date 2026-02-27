@@ -70,3 +70,17 @@ class Post_spot(db.Model):
             "has_water": self.has_water,
             "has_waste_dump": self.has_waste_dump
         }
+
+class Media_spot(db.Model):
+    media_id: Mapped[int] = mapped_column(primary_key=True)
+    post_id: Mapped[int] = mapped_column(ForeignKey("post_spot.spot_id"), nullable=False)
+    url: Mapped[str] = mapped_column(String(255), nullable=False)
+    media_type: Mapped[str] = mapped_column(String(50), nullable=True) 
+
+    def serialize(self):
+        return {
+            "media_id": self.media_id,
+            "post_id": self.post_id,
+            "url": self.url,
+            "media_type": self.media_type,
+        }

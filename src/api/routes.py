@@ -2,7 +2,7 @@
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
 """
 from flask import Flask, request, jsonify, url_for, Blueprint
-from api.models import db, User, Post_spot
+from api.models import db, User, Post_spot, Media_spot
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
 from sqlalchemy import select
@@ -125,9 +125,8 @@ def get_spot_by_id(spot_id):
     else:
         data["userName"] = "Usuario desconocido"
 
-    # DESCOMENTAR CUANDO SE CREE LA TABLA MEDIA SPOT
-    # media_spot = Media_Spot.query.filter_by(post_id=spot_id).all()
-    # data["media"] = [item.serialize() for item in media_spot]
+    media_list = Media_Spot.query.filter_by(post_id=spot_id).all()
+    data["media"] = [item.serialize() for item in media_list]
     return jsonify(data), 200
 
 
@@ -226,3 +225,49 @@ def delete_spot(spot_id):
     return jsonify({"msg": "Spot eliminado correctamente"}), 200
 
 # -------FIN DE RUTAS SPOTS-------
+
+# -------------------RUTAS MODELO MEDIA-SPOT---------------------
+
+@api.route("/spots/<int:spot_id>/media", methods=["POST"])
+@jwt_required()
+def add_media_to_spot(spot_id):
+    data = request.get_json()
+    
+    spot = Post_spot.query.get(spot_id)
+    if spot is None:
+        return jsonify({"msg": "Ese spot no existe"}), 404
+        
+    if "url" not in data:
+        return jsonify({"msg": "Tienes que poner una URL para la foto"}), 400
+        
+    new_media = Media_spot(
+        post_id=spot_id,        
+        url=data.get("url"),    
+        media_type=data.get("media_type", "image")
+    )
+    
+    db.session.add(new_media)
+    db.session.commit()
+    
+    return jsonify(new_media.serialize()), 201
+
+@api.route("/spots/<int:spot_id>/media", methods=["GET"])
+def get_spot_media(spot_id):
+    media_list = Media_spot.query.filter_by(post_id=spot_id).all()
+    
+    return jsonify([item.serialize() for item in media_list]), 200
+
+@api.route("/media/<int:media_id>", methods=["DELETE"])
+@jwt_required()
+def delete_media(media_id):
+    media = Media_spot.query.get(media_id)
+    
+    if media is None:
+        return jsonify({"msg": "La foto no existe"}), 404
+
+    db.session.delete(media)
+    db.session.commit()
+    
+    return jsonify({"msg": "Foto eliminada correctamente"}), 200
+
+# -------FIN DE RUTAS MEDIA - SPOTS-------
