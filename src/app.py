@@ -9,11 +9,13 @@ from api.utils import APIException, generate_sitemap
 from api.models import db
 from api.routes import api
 from api.route.auth import auth
+from api.route.booking import booking
 from api.route.spot import spot
 from api.route.van import van
 from api.admin import setup_admin
 from api.commands import setup_commands
 from flask_jwt_extended import JWTManager
+from datetime import timedelta
 
 # from models import Person
 
@@ -24,6 +26,7 @@ app = Flask(__name__)
 app.url_map.strict_slashes = False
 
 app.config["JWT_SECRET_KEY"] = os.getenv('SECRET_KEY') 
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=24) #para que el token dure 24 horas disponible
 jwt = JWTManager(app)
 # database condiguration
 db_url = os.getenv("DATABASE_URL")
@@ -49,6 +52,7 @@ app.register_blueprint(api, url_prefix='/api')
 app.register_blueprint(auth, url_prefix='/auth')
 app.register_blueprint(spot, url_prefix='/spot')
 app.register_blueprint(van, url_prefix='/van')
+app.register_blueprint(booking, url_prefix='/booking')
 # Handle/serialize errors like a JSON object
 
 
