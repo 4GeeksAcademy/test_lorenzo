@@ -12,6 +12,7 @@ from api.route.auth import auth
 from api.route.booking import booking
 from api.route.spot import spot
 from api.route.van import van
+from api.route.coment import coment
 from api.admin import setup_admin
 from api.commands import setup_commands
 from flask_jwt_extended import JWTManager
@@ -53,6 +54,7 @@ app.register_blueprint(auth, url_prefix='/auth')
 app.register_blueprint(spot, url_prefix='/spot')
 app.register_blueprint(van, url_prefix='/van')
 app.register_blueprint(booking, url_prefix='/booking')
+app.register_blueprint(coment, url_prefix='/coment')
 # Handle/serialize errors like a JSON object
 
 

@@ -1,13 +1,11 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import String, Boolean, Numeric, Integer, ForeignKey, Float, Text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from flask_bcrypt import generate_password_hash, check_password_hash
 from datetime import date
 from decimal import Decimal
 
-
 db = SQLAlchemy()
-
 
 class User(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -19,6 +17,10 @@ class User(db.Model):
     phone: Mapped[int] = mapped_column(unique=True, nullable=True)
     address: Mapped[str] = mapped_column(String(120), nullable=True)
     # is_active: Mapped[bool] = mapped_column(Boolean(), nullable=False)
+
+    coment: Mapped[list["Coment"]] = relationship(back_populates="user_coment")
+    post_spot: Mapped[list["Post_spot"]] = relationship(back_populates="user_post")
+    booking: Mapped[list["Booking"]] = relationship(back_populates="user_booking")
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password).decode("utf-8")
@@ -49,6 +51,7 @@ class Vehicle(db.Model):
     images: Mapped[str] = mapped_column(String(600), nullable=False)
     available: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
    
+    booking: Mapped[list["Booking"]] = relationship(back_populates="van_booking")
 
     def serialize(self):
         return {
@@ -64,7 +67,6 @@ class Vehicle(db.Model):
         }
     
 # Modelo de Media_vehicle
-
 
 class Post_spot(db.Model):
     spot_id: Mapped[int] = mapped_column(primary_key=True)
@@ -84,6 +86,10 @@ class Post_spot(db.Model):
         Boolean, default=False, nullable=True)
     has_waste_dump: Mapped[bool] = mapped_column(
         Boolean, default=False, nullable=True)
+    
+    user_post : Mapped["User"] = relationship(back_populates="post_spot")
+    post: Mapped[list["Coment"]] = relationship(back_populates="post_coment")
+    spot_media: Mapped[list["Media_spot"]] =relationship(back_populates="media_spot")
 
     def serialize(self):
         return {
@@ -106,6 +112,8 @@ class Media_spot(db.Model):
     url: Mapped[str] = mapped_column(String(255), nullable=False)
     media_type: Mapped[str] = mapped_column(String(50), nullable=True) 
 
+    media_spot: Mapped["Post_spot"] = relationship(back_populates="spot_media")
+
     def serialize(self):
         return {
             "media_id": self.media_id,
@@ -113,7 +121,6 @@ class Media_spot(db.Model):
             "url": self.url,
             "media_type": self.media_type,
         }
-
 
 class Booking(db.Model):
     booking_id: Mapped[int] = mapped_column(primary_key=True)
@@ -123,6 +130,9 @@ class Booking(db.Model):
     end_date: Mapped[date] = mapped_column(db.Date, nullable=False)
     status: Mapped[str] = mapped_column(String(50), default="pending") # pending, confirmed, cancelled
     total_price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
+
+    user_booking: Mapped["User"] = relationship(back_populates="booking")
+    van_booking: Mapped["Vehicle"] = relationship(back_populates="booking")
 
     def serialize(self):
         return {
@@ -135,3 +145,21 @@ class Booking(db.Model):
             "total_price": float(self.total_price) # aqui se pasa a float para que el JSON lo acepte 
         }
     
+class Coment (db.Model):
+    coment_id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False) #FK
+    spot_id: Mapped[int] = mapped_column(ForeignKey("post_spot.spot_id"), nullable=False) #FK
+    rating: Mapped[int] = mapped_column(nullable=False)
+    coment_text: Mapped[str] = mapped_column(String(450), nullable=False)
+
+    user_coment : Mapped["User"] = relationship(back_populates="coment")
+    post_coment : Mapped["Post_spot"] = relationship(back_populates="post")
+
+    def serialize(self):
+        return{
+        "coment_id": self.coment_id,
+        "user_id": self.user_id,
+        "spot_id": self.spot_id,
+        "rating": self.rating,
+        "coment_text": self.coment_text
+        }
