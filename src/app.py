@@ -26,7 +26,7 @@ static_file_dir = os.path.join(os.path.dirname(
 app = Flask(__name__)
 app.url_map.strict_slashes = False
 
-app.config["JWT_SECRET_KEY"] = os.getenv('SECRET_KEY') 
+app.config["JWT_SECRET_KEY"] = os.getenv('JWT_SECRET_KEY') 
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=24) #para que el token dure 24 horas disponible
 jwt = JWTManager(app)
 # database condiguration
