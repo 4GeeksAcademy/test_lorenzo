@@ -21,6 +21,8 @@ class User(db.Model):
     coment: Mapped[list["Coment"]] = relationship(back_populates="user_coment")
     post_spot: Mapped[list["Post_spot"]] = relationship(back_populates="user_post")
     booking: Mapped[list["Booking"]] = relationship(back_populates="user_booking")
+    review_user: Mapped[list["Review_van"]] = relationship(back_populates="user_id_review")
+
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password).decode("utf-8")
@@ -48,10 +50,10 @@ class Vehicle(db.Model):
     capacity: Mapped[int] = mapped_column(Integer, nullable=False)
     type_vehicle: Mapped[str] = mapped_column(String(120), nullable=False)
     price_per_day: Mapped[float] = mapped_column(Numeric(precision=10, scale=2), nullable=False)
-    
     available: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
    
     booking: Mapped[list["Booking"]] = relationship(back_populates="van_booking")
+    review_car: Mapped[list["Review_van"]] = relationship(back_populates="car_id_review")
 
     def serialize(self):
         return {
@@ -137,6 +139,7 @@ class Media_vehicle(db.Model):
             "url_vehicle": self.url_vehicle,
             "media_type": self.media_type,
         }
+
 class Booking(db.Model):
     booking_id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
@@ -148,6 +151,7 @@ class Booking(db.Model):
 
     user_booking: Mapped["User"] = relationship(back_populates="booking")
     van_booking: Mapped["Vehicle"] = relationship(back_populates="booking")
+    review_booking: Mapped[list["Review_van"]] = relationship(back_populates="bookking_id_review")
 
     def serialize(self):
         return {
@@ -178,3 +182,22 @@ class Coment (db.Model):
         "rating": self.rating,
         "coment_text": self.coment_text
         }
+    
+class Review_van(db.Model):
+    review_van_id: Mapped[int] = mapped_column(primary_key = True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable= False)
+    bookking_id: Mapped[int] = mapped_column(ForeignKey("booking.booking_id"), nullable=False)
+    car_id: Mapped[int] = mapped_column(ForeignKey("vehicle.car_id"), nullable= False)
+
+    user_id_review: Mapped["User"] = relationship(back_populates="review_user")
+    car_id_review: Mapped["Vehicle"] = relationship(back_populates="review_car")
+    bookking_id_review: Mapped["Booking"] = relationship(back_populates="review_booking")
+
+    def serialize(self):
+        return{
+            "review_van_id": self.review_van_id,
+            "user_id": self.user_id,
+            "booking_id": self.bookking_id,
+            "car_id": self.car_id
+        }
+
