@@ -48,10 +48,11 @@ class Vehicle(db.Model):
     capacity: Mapped[int] = mapped_column(Integer, nullable=False)
     type_vehicle: Mapped[str] = mapped_column(String(120), nullable=False)
     price_per_day: Mapped[float] = mapped_column(Numeric(precision=10, scale=2), nullable=False)
-    
     available: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-   
+
     booking: Mapped[list["Booking"]] = relationship(back_populates="van_booking")
+    media: Mapped[list["Media_vehicle"]] =relationship(back_populates="vehicle")
+
 
     def serialize(self):
         return {
@@ -61,11 +62,26 @@ class Vehicle(db.Model):
             "description": self.description,
             "capacity": self.capacity,
             "type_vehicle": self.type_vehicle,
-            "price_per_day": self.price_per_day,
-            "available": self.available
+            "price_per_day": float(self.price_per_day) if self.price_per_day is not None else None,
+            "available": self.available,
+            "media": [item.serialize() for item in self.media]
         }
     
-# Modelo de Media_vehicle
+class Media_vehicle(db.Model):
+    media_vehicle_id: Mapped[int] = mapped_column(primary_key=True)
+    car_id: Mapped[int] = mapped_column(ForeignKey("vehicle.car_id"), nullable=False)
+    url_vehicle: Mapped[str] = mapped_column(String(255), nullable=False)
+    media_type: Mapped[str] = mapped_column(String(50), nullable=True) 
+
+    vehicle: Mapped["Vehicle"] = relationship(back_populates="media")
+
+    def serialize(self):
+        return {
+            "media_vehicle_id": self.media_vehicle_id,
+            "car_id": self.car_id,
+            "url_vehicle": self.url_vehicle,
+            "media_type": self.media_type,
+        }
 
 class Post_spot(db.Model):
     spot_id: Mapped[int] = mapped_column(primary_key=True)
@@ -122,21 +138,6 @@ class Media_spot(db.Model):
         }
 
 
-# media vehicle tabla suplementaria,(mover junto con el modelo de vehiculo )
-
-class Media_vehicle(db.Model):
-    media_vehicle_id: Mapped[int] = mapped_column(primary_key=True)
-    car_id: Mapped[int] = mapped_column(ForeignKey("vehicle.car_id"), nullable=False)
-    url: Mapped[str] = mapped_column(String(255), nullable=False)
-    media_type: Mapped[str] = mapped_column(String(50), nullable=True) 
-
-    def serialize(self):
-        return {
-            "media_vehicle_id": self.media_vehicle_id,
-            "car_id": self.car_id,
-            "url_vehicle": self.url_vehicle,
-            "media_type": self.media_type,
-        }
 class Booking(db.Model):
     booking_id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
