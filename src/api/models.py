@@ -1,11 +1,19 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import String, Boolean, Numeric, Integer, ForeignKey, Float, Text
+from sqlalchemy import String, Boolean, Numeric, Integer, ForeignKey, Float, Text, Table, Column
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from flask_bcrypt import generate_password_hash, check_password_hash
 from datetime import date
 from decimal import Decimal
 
 db = SQLAlchemy()
+
+favorite_spot = Table(
+    "favorire_spot",
+    db.metadata,
+    Column("id", db.Integer, primary_key=True),
+    Column("User_id", ForeignKey("user.id"), nullable=False),
+    Column("Spot_id", ForeignKey("post_spot.spot_id"), nullable=False)
+)
 
 class User(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -22,7 +30,11 @@ class User(db.Model):
     post_spot: Mapped[list["Post_spot"]] = relationship(back_populates="user_post")
     booking: Mapped[list["Booking"]] = relationship(back_populates="user_booking")
     review_user: Mapped[list["Review_van"]] = relationship(back_populates="user_id_review")
-
+    fav_spot: Mapped[list["Post_spot"]] = relationship(
+        "Post_spot",
+        secondary =  favorite_spot,
+        back_populates= "fav_spot_by"
+    )
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password).decode("utf-8")
@@ -91,6 +103,11 @@ class Post_spot(db.Model):
     user_post : Mapped["User"] = relationship(back_populates="post_spot")
     post: Mapped[list["Coment"]] = relationship(back_populates="post_coment")
     spot_media: Mapped[list["Media_spot"]] =relationship(back_populates="media_spot")
+    fav_spot_by: Mapped[list["User"]] = relationship(
+        "User",
+        secondary = favorite_spot,
+        back_populates = "fav_spot"
+    )
 
     def serialize(self):
         return {
@@ -188,6 +205,8 @@ class Review_van(db.Model):
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable= False)
     bookking_id: Mapped[int] = mapped_column(ForeignKey("booking.booking_id"), nullable=False)
     car_id: Mapped[int] = mapped_column(ForeignKey("vehicle.car_id"), nullable= False)
+    coment_review: Mapped[str]= mapped_column(String(450), nullable=True)
+    rating_review: Mapped[int]= mapped_column(nullable=False)
 
     user_id_review: Mapped["User"] = relationship(back_populates="review_user")
     car_id_review: Mapped["Vehicle"] = relationship(back_populates="review_car")
@@ -198,6 +217,8 @@ class Review_van(db.Model):
             "review_van_id": self.review_van_id,
             "user_id": self.user_id,
             "booking_id": self.bookking_id,
-            "car_id": self.car_id
+            "car_id": self.car_id,
+            "coment_review": self.coment_review,
+            "rating_review": self.rating_review
         }
 
