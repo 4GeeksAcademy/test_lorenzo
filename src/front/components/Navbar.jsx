@@ -16,6 +16,7 @@ export const Navbar = () => {
 						<ul className="navbar-nav mb-2 mb-md-0">
 							<li className="nav-item"><a className="nav-link" href="#">Spot</a></li>
 							<li className="nav-item"><a className="nav-link" href="#">Rent</a></li>
+							<li className="nav-item"><Link className="nav-link" to="/map">Mapa</Link></li>
 						</ul>
 						<form className="d-flex mx-auto" role="search">
 							<input className="form-control me-2" type="search" placeholder="Search" />

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="180mm"
+   height="200mm"
+   viewBox="0 0 180 200"
+   version="1.1"
+   id="svg1"
+   xml:space="preserve"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"><defs
+     id="defs1" /><g
+     id="layer1"><circle
+       style="display:inline;fill:#00473c;fill-opacity:1;stroke:none;stroke-width:0.806075"
+       id="path4"
+       cx="90.291084"
+       cy="90.823784"
+       r="87.094948" /><g
+       fill-rule="evenodd"
+       id="g3"
+       transform="matrix(1.3948985,0,0,1.4924124,45.653369,44.878395)"
+       style="display:inline;fill:#ffffff;fill-opacity:1"><path
+         d="m 61.821,11.045 c 0.703,-1.309 -0.891,-0.912 -0.891,-0.912 0,0 -10.627,10.201 -12.104,8.951 C 47.349,17.834 59.231,8.057 57.825,6.23 56.524,4.527 46.085,16.685 44.831,15.2 43.589,13.718 53.77,3.077 53.77,3.077 c 0,0 0.387,-1.602 -0.912,-0.9 -16.007,8.608 -18.046,16.633 -18.046,16.633 0,0 -0.551,1.563 0.645,2.771 0.117,0.105 -29.204,29.26 -33.129,33.196 -1.91,1.908 5.098,8.801 6.996,6.893 3.926,-3.936 33.024,-33.303 33.129,-33.194 1.207,1.205 2.766,0.652 2.766,0.652 0,0 8.012,-2.045 16.602,-18.083"
+         fill="#000000"
+         id="path1-4"
+         style="fill:#f4f3e7;fill-opacity:1" /><path
+         d="m 32.028,40.507 c 7.803,7.82 20.958,20.999 20.958,20.999 0,0 5.742,-1.879 6.551,-6.729 L 38.662,33.861 a 5104.35,5104.35 0 0 0 -6.634,6.646"
+         fill="#000000"
+         id="path2"
+         style="fill:#f4f3e7;fill-opacity:1" /><path
+         d="m 21.76,33.729 a 5059.26,5059.26 0 0 0 8.387,-8.4 L 7.459,2.598 c 0,0 -0.41,-0.43 -1.313,0.477 -1.793,1.787 -5.262,13.173 9.445,27.902 2.331,2.336 4.359,2.66 6.169,2.752"
+         fill="#000000"
+         id="path3"
+         style="fill:#f4f3e7;fill-opacity:1;stroke:#f4f3e7;stroke-width:0;stroke-dasharray:none;stroke-opacity:1" /></g><rect
+       style="display:inline;fill:#00473c;fill-opacity:1;stroke:none;stroke-width:0.880108"
+       id="rect1"
+       width="40.156826"
+       height="41.352551"
+       x="31.922606"
+       y="-204.12848"
+       transform="matrix(-0.70985435,0.7043485,-0.69339178,-0.72056078,0,0)" /></g></svg>
