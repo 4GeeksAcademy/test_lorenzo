@@ -1,6 +1,5 @@
-/* ELIMINAMOS las 3 líneas de @tailwind que resetean la web */
 
-/* Definimos los colores personalizados que pide el tutorial */
+/* Colores personalizados que pide el tutorial */
 :root {
   --color-sg-green: #00473C;
   --color-sg-light-green: #f4f3e7;

@@ -13,12 +13,12 @@ export const Map = () => {
   const [mapLoaded, setMapLoaded] = useState(false);
   const [selectedStore, setSelectedStore] = useState(null);
 
-  // --- NUEVO: Estado para los filtros ---
+  //  Estado para los filtros
   const [filters, setFilters] = useState({
     water: false,
     sleep: false,
     waste: false,
-    electricity: false // Agregamos electricidad aquí
+    electricity: false 
   });
 
   useEffect(() => {
@@ -49,7 +49,7 @@ export const Map = () => {
     return matchWater && matchSleep && matchWaste && matchElectric;
   });
 
-  // 2. INICIALIZAR EL MAPA (Se mantiene igual)
+  // INICIALIZAR EL MAPA 
   useEffect(() => {
     const token = import.meta.env.VITE_MAPBOX_TOKEN;
     if (!token || mapRef.current) return;
@@ -73,7 +73,7 @@ export const Map = () => {
     return () => { mapRef.current?.remove(); mapRef.current = null; };
   }, []);
 
-  // 3. EFECTO DE VUELO (Se mantiene igual)
+  // EFECTO DE VUELO 
   useEffect(() => {
     if (!selectedStore || !mapRef.current) return;
     const coords = selectedStore.geometry?.coordinates || [selectedStore.longitude, selectedStore.latitude];
