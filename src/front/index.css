@@ -1,0 +1,26 @@
+
+/* Colores personalizados que pide el tutorial */
+:root {
+  --color-sg-green: #00473C;
+  --color-sg-light-green: #f4f3e7;
+}
+
+/* Clases manuales para el localizador de tiendas */
+/* Así imitamos a Tailwind sin que rompa el resto de la web */
+
+.flex { display: flex; }
+.w-full { width: 100%; }
+.h-full { height: 100%; }
+.w-1-4 { width: 25%; } /* Equivalente a w-1/4 */
+.w-3-4 { width: 75%; } /* Equivalente a w-3/4 */
+.p-4 { padding: 1.5rem; }
+.bg-sg-light-green { background-color: var(--color-sg-light-green); }
+.text-sg-green { color: var(--color-sg-green); }
+.font-bold { font-weight: bold; }
+.text-xl { font-size: 1.25rem; }
+
+/* Para que el mapa no tape el Navbar */
+nav {
+  z-index: 10;
+  position: relative;
+}

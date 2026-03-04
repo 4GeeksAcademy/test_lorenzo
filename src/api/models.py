@@ -104,6 +104,9 @@ class Post_spot(db.Model):
     name: Mapped[str] = mapped_column(String(120), nullable=True)
     category: Mapped[str] = mapped_column(String(50), nullable=True)
     description: Mapped[str] = mapped_column(Text, nullable=True)
+    address: Mapped[str] = mapped_column(String(250), nullable=True)
+    city: Mapped[str] = mapped_column(String(100), nullable=True)
+    phone_formatted: Mapped[str] = mapped_column(String(30), nullable=True)
     longitude: Mapped[float] = mapped_column(
         Numeric(precision=9, scale=6), nullable=True)
     latitude: Mapped[float] = mapped_column(
@@ -116,6 +119,7 @@ class Post_spot(db.Model):
         Boolean, default=False, nullable=True)
     has_waste_dump: Mapped[bool] = mapped_column(
         Boolean, default=False, nullable=True)
+    has_electricity: Mapped[bool] = mapped_column(Boolean, default=False, nullable=True)
     
     user_post : Mapped["User"] = relationship(back_populates="post_spot")
     post: Mapped[list["Coment"]] = relationship(back_populates="post_coment")
@@ -133,12 +137,16 @@ class Post_spot(db.Model):
             "name": self.name,
             "category": self.category,
             "description": self.description,
+            "address": self.address, 
+            "city": self.city,
+            "phoneFormatted": self.phone_formatted,
             "longitude": float(self.longitude) if self.longitude is not None else 0.0,
             "latitude": float(self.latitude) if self.latitude is not None else 0.0,
             "rating": float(self.rating) if self.rating is not None else None,
             "is_sleepable": self.is_sleepable,
             "has_water": self.has_water,
-            "has_waste_dump": self.has_waste_dump
+            "has_waste_dump": self.has_waste_dump,
+            "has_electricity": self.has_electricity
         }
 
 class Media_spot(db.Model):
