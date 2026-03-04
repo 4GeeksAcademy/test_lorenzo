@@ -26,6 +26,14 @@ export const Map = () => {
   const [stores, setStores] = useState([]); // Todos los spots de nuestra Base de Datos
   const [selectedStore, setSelectedStore] = useState(null); // Spot seleccionado en la Sidebar
 
+  //  Estado para los filtros
+  const [filters, setFilters] = useState({
+    water: false,
+    sleep: false,
+    waste: false,
+    electricity: false 
+  });
+
   // 1. CARGA INICIAL: Traemos los datos de nuestra propia API
   useEffect(() => {
     const loadSpots = async () => {
@@ -36,6 +44,20 @@ export const Map = () => {
   }, []);
 
   // 2. CONFIGURACIÓN DEL MAPA: Se ejecuta una sola vez al cargar la página
+
+  // --- LÓGICA DE FILTRADO ---
+  // Filtramos los stores antes de pasarlos al Sidebar y a los Markers
+  const filteredStores = stores.filter(store => {
+    // Si el filtro está en 'false', pasa todo. Si está en 'true', el store debe tener la propiedad en true.
+    const matchWater = !filters.water || store.has_water;
+    const matchSleep = !filters.sleep || store.is_sleepable;
+    const matchWaste = !filters.waste || store.has_waste_dump;
+    const matchElectric = !filters.electricity || store.has_electricity; 
+    
+    return matchWater && matchSleep && matchWaste && matchElectric;
+  });
+
+  // INICIALIZAR EL MAPA 
   useEffect(() => {
     if (mapRef.current) return; // Evita que el mapa se cree dos veces
 
@@ -74,7 +96,9 @@ export const Map = () => {
     };
   }, []);
 
+
   // 3. NAVEGACIÓN: Mueve la cámara cuando seleccionamos un sitio en la Sidebar
+  // EFECTO DE VUELO 
   useEffect(() => {
     if (selectedStore && mapRef.current) {
       // Intentamos sacar las coordenadas tanto si vienen de nuestra DB como de Mapbox

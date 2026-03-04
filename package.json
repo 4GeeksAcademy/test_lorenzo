@@ -59,6 +59,7 @@
 		"@mapbox/search-js-web": "^1.5.1",
 		"@tailwindcss/postcss": "^4.2.1",
 		"autoprefixer": "^10.4.27",
+		"mapbox-gl": "^3.19.0",
 		"postcss": "^8.5.8",
 		"prop-types": "^15.8.1",
 		"react": "^18.2.0",
