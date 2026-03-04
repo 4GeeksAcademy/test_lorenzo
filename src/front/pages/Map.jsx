@@ -3,7 +3,6 @@ import mapboxgl from 'mapbox-gl';
 import { Marker } from '../components/Map-components/Marker';
 import { Sidebar } from '../components/Map-components/Sidebar';
 import { getAllSpots } from '../services/spotServices';
-
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 export const Map = () => {
