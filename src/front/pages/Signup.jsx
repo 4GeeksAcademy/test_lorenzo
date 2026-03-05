@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react"
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 import { signUp } from "../services/BackEndService.js";
+import { useNavigate } from "react-router-dom";
 
 export const Signup = () => {
 
     const { store, dispatch } = useGlobalReducer()
+    const navigate = useNavigate();
 
     const [user, setUser] = useState({
         email: "",
@@ -22,31 +24,34 @@ export const Signup = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
 
     const handleSubmit = async (e) => {
-         e.preventDefault();
-         setError("");
+        e.preventDefault();
+        setError("");
 
-         if(!user.email.trim() || !user.password.trim() || !user.confirmPassword.trim()) {
+        if (!user.email.trim() || !user.password.trim() || !user.confirmPassword.trim()) {
             setError("Por favor, completa todos los campos.");
             return;
-         }
-         if(user.password.length < 6) {
+        }
+        if (user.password.length < 6) {
             setError("La contraseña debe tener al menos 6 caracteres.");
             return;
-         }  
-         
-         if(user.password !== user.confirmPassword) {
+        }
+
+        if (user.password !== user.confirmPassword) {
             setError("Las contraseñas no coinciden");
             return;
-         }
-         const response = await signUp(user)
-         if (response.error){
+        }
+        setLoading(true);
+        const response = await signUp(user)
+        if (response.error) {
             setError(response.error)
             return;
-         }
-         
-     }
+        }
+        navigate("/")
+
+    }
 
     useEffect(() => {
         console.log(user)
@@ -67,17 +72,17 @@ export const Signup = () => {
                                 <span className="input-group-text">
                                     <i className="fa-solid fa-envelope"></i>
                                 </span>
-                            <input type="email" className="form-control"
-                                id="exampleInputEmail1"
-                                aria-describedby="emailHelp"
-                                name="email"
-                                value={user.email}
-                                onChange={handleChange}
-                                required>
-                            </input>
+                                <input type="email" className="form-control"
+                                    id="exampleInputEmail1"
+                                    aria-describedby="emailHelp"
+                                    name="email"
+                                    value={user.email}
+                                    onChange={handleChange}
+                                    required>
+                                </input>
                             </div>
                             <div id="emailHelp" className="form-text">Nunca compartiremos tu correo electrónico con nadie más.</div>
-                            
+
                         </div>
                         <div className="mb-3">
                             <label htmlFor="exampleInputPassword1" className="form-label">Contraseña</label>
@@ -121,16 +126,30 @@ export const Signup = () => {
                                     type="button"
                                     className="btn btn-outline-secondary"
                                     onClick={() => setShowConfirmPassword((s) => !s)}>
-                                    <i className={`fa-solid ${showConfirmPassword ? "fa-eye-slash" : "fa-eye"}`} />                                
+                                    <i className={`fa-solid ${showConfirmPassword ? "fa-eye-slash" : "fa-eye"}`} />
                                 </button>
                             </div>
 
                         </div>
-                        <div className="mb-3 form-check">
-                            <input type="checkbox" className="form-check-input" id="exampleCheck1"></input>
-                            <label className="form-check-label" htmlFor="exampleCheck1">He leído y acepto la política de privacidad.</label>
-                        </div>
-                        <button type="submit" className="btn btn-primary w-100">Registrarse</button>
+                        
+                        <button
+                            type="submit"
+                            className="btn btn-primary w-100"
+                            disabled={loading}
+                        >
+                            {loading ? (
+                                <span className="d-inline-flex align-items-center gap-2">
+                                    <span
+                                        className="spinner-border spinner-border-sm"
+                                        role="status"
+                                        aria-hidden="true"
+                                    ></span>
+                                    Creando...
+                                </span>
+                            ) : (
+                                "Crear cuenta"
+                            )}
+                        </button>
                     </form>
 
                 </div>
