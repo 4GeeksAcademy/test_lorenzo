@@ -1,83 +1,151 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
-// 1. Añadimos filters y setFilters a las props que recibe el componente
-export const Sidebar = ({ stores, selectedStore, setSelectedStore, filters, setFilters }) => {
-  
-  const storeRefs = useRef({});
+export const Sidebar = ({ stores, selectedStore, setSelectedStore }) => {
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    const storeName = selectedStore?.properties?.name || selectedStore?.name;
-    if (storeName && storeRefs.current[storeName]) {
-      storeRefs.current[storeName].scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest'
-      });
-    }
-  }, [selectedStore]);
+  // Función lógica para asignar el icono visual según la categoría técnica
+  const getCategoryIcon = (category) => {
+    const icons = {
+      campground: '🏕️',
+      parking: '🅿️',
+      water_waste: '💧',
+      gas_station: '⛽',
+      supermarket: '🛒'
+    };
+    return icons[category?.toLowerCase()] || '📍';
+  };
 
   return (
-    <div style={{
-      width: '300px',
-      minWidth: '300px',
+    <aside style={{
+      width: '320px',
       height: '100%',
-      backgroundColor: '#f4f3e7',
       overflowY: 'auto',
-      borderRight: '1px solid #00473C',
-      zIndex: 10,
-      position: 'relative'
+      backgroundColor: '#f8f9fa',
+      borderRight: '1px solid #e0e0e0',
+      display: 'flex',
+      flexDirection: 'column'
     }}>
-      <div style={{ padding: '20px' }}>
-        
-        {/* Título dinámico */}
-        <h2 style={{ color: '#00473C', fontSize: '1.2rem', fontWeight: 'bold', marginBottom: '20px' }}>
-          {stores && stores.length > 0 
-            ? `Lugares encontrados: ${stores.length}` 
-            : "Buscando lugares..."}
+      {/* Cabecera Fija */}
+      <header style={{
+        padding: '12px 15px',
+        backgroundColor: '#00473C',
+        color: 'white',
+        position: 'sticky',
+        top: 0,
+        zIndex: 10,
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+      }}>
+        <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: '600' }}>
+          📍 Lugares ({stores.length})
         </h2>
+      </header>
 
-        {/* --- AQUÍ PODREMOS METER LOS BOTONES DE FILTRO PRÓXIMAMENTE --- */}
-
-        {stores && stores.length > 0 ? (
-          stores.map((store, i) => {
-            const currentStore = store.properties ? store.properties : store;
-            const name = currentStore.name || "Sin nombre";
-            const address = currentStore.address || "Sin dirección";
-            const phone = currentStore.phoneFormatted || "";
-
-            const isSelected = (selectedStore?.properties?.name || selectedStore?.name) === name;
+      {/* Contenedor de la lista */}
+      <div style={{ padding: '10px' }}>
+        {stores.length === 0 ? (
+          <div style={{ textAlign: 'center', color: '#666', marginTop: '20px' }}>
+            <p style={{ fontSize: '0.9rem' }}>Busca en el mapa...</p>
+          </div>
+        ) : (
+          stores.map((store) => {
+            // Comprobamos si este elemento es el que está seleccionado en el mapa
+            const isSelected = selectedStore?.id === store.id;
 
             return (
-              <div
-                key={`${name}-${i}`}
-                ref={(el) => { if (el) storeRefs.current[name] = el; }}
+              <article
+                key={store.id}
                 onClick={() => setSelectedStore(store)}
                 style={{
-                  backgroundColor: isSelected ? 'white' : 'rgba(255,255,255,0.4)',
-                  padding: '15px',
-                  borderRadius: '12px',
-                  marginBottom: '12px',
+                  padding: '10px 12px',
+                  marginBottom: '8px',
+                  backgroundColor: isSelected ? '#e6f2f0' : '#ffffff',
+                  border: isSelected ? '1px solid #00473C' : '1px solid #eee',
+                  borderRadius: '8px',
                   cursor: 'pointer',
-                  border: isSelected ? '2px solid #00473C' : '1px solid transparent',
-                  boxShadow: isSelected ? '0 4px 6px rgba(0,0,0,0.1)' : 'none',
-                  transition: 'all 0.2s ease-in-out'
+                  transition: 'background-color 0.2s ease',
                 }}
               >
-                <h4 style={{ margin: '0 0 5px 0', fontSize: '1rem', color: '#00473C', fontWeight: '600' }}>
-                  {name}
-                </h4>
-                <div style={{ fontSize: '0.85rem', color: '#444', lineHeight: '1.4' }}>
-                  <p style={{ margin: 0 }}><strong>Dirección:</strong> {address}</p>
-                  {phone && <p style={{ margin: '5px 0 0 0' }}><strong>Tel:</strong> {phone}</p>}
+                {/* Info principal del Spot */}
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
+                  <span style={{ fontSize: '1.2rem' }} role="img" aria-label="icon">
+                    {getCategoryIcon(store.category)}
+                  </span>
+                  <div style={{ flex: 1 }}>
+                    <h3 style={{ margin: '0', fontSize: '0.95rem', color: '#2c3e50', lineHeight: '1.2' }}>
+                      {store.name}
+                    </h3>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '4px' }}>
+                      {store.isCustom ? (
+                        // Lógica para puntos de TU base de datos
+                        store.rating ? (
+                          <>
+                            <span style={{ color: '#FFB800', fontSize: '0.8rem' }}>
+                              {"★".repeat(Math.round(store.rating)) + "☆".repeat(5 - Math.round(store.rating))}
+                            </span>
+                            <span style={{ color: '#95a5a6', fontSize: '0.7rem' }}>({store.rating.toFixed(1)})</span>
+                          </>
+                        ) : (
+                          <span style={{ color: '#bdc3c7', fontSize: '0.7rem', fontStyle: 'italic' }}>Pendiente de valorar</span>
+                        )
+                      ) : (
+                        // Lógica para puntos de Mapbox (Supermercados, etc.)
+                        <span style={{ color: '#bdc3c7', fontSize: '0.7rem' }}>📍 Punto de interés</span>
+                      )}
+                    </div>
+
+                    <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: '#95a5a6' }}>
+                      {store.address}
+                    </p>
+                  </div>
                 </div>
-              </div>
+
+                {store.isCustom && (
+                  <div style={{
+                    marginTop: '8px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    borderTop: '1px solid #f0f0f0',
+                    paddingTop: '8px'
+                  }}>
+                    <span style={{
+                      fontSize: '0.65rem',
+                      backgroundColor: '#d1e7dd',
+                      color: '#0f5132',
+                      padding: '2px 6px',
+                      borderRadius: '4px',
+                      fontWeight: 'bold'
+                    }}>
+                      COMUNIDAD
+                    </span>
+
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate('/spots');
+                      }}
+                      style={{
+                        padding: '4px 8px',
+                        backgroundColor: '#00473C',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        fontSize: '0.75rem',
+                        fontWeight: 'bold',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Ver más
+                    </button>
+                  </div>
+                )}
+              </article>
             );
           })
-        ) : (
-          <div style={{ textAlign: 'center', marginTop: '40px', color: '#666' }}>
-             <p>No hay lugares que coincidan con los filtros.</p>
-          </div>
         )}
       </div>
-    </div>
+    </aside>
   );
 };
