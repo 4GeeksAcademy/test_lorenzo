@@ -51,7 +51,7 @@ def get_all_vehicles():
     return jsonify(result), 200
 
 @van.route('/vehicles/<int:car_id>', methods=['GET'])
-@jwt_required()
+# @jwt_required()
 def get_vehicle(car_id):
     vehicle =Vehicle.query.get(car_id)
 
