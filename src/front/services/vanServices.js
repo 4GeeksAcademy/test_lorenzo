@@ -11,3 +11,10 @@ export const getAllVans = async (dispatch) => {
     
     dispatch({type:"set_vans", payload: data.vehicles || data})
 }
+
+export const getSingleVan = async (id) => {
+    const response = await fetch(`${API_URL}/van/vehicles/${id}`); 
+    if (!response.ok);
+    const data = await response.json();
+    return data;
+};
