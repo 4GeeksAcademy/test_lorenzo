@@ -127,7 +127,7 @@ export const Signup = () => {
                                     className="btn btn-outline-secondary"
                                     onClick={() => setShowConfirmPassword((s) => !s)}>
                                     <i className={`fa-solid ${showConfirmPassword ? "fa-eye-slash" : "fa-eye"}`} />
-                                </button>git
+                                </button>
                             </div>
 
                         </div>
