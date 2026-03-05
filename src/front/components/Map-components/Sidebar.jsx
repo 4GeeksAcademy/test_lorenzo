@@ -17,22 +17,22 @@ export const Sidebar = ({ stores, selectedStore, setSelectedStore }) => {
   };
 
   return (
-    <aside style={{ 
-      width: '320px', 
-      height: '100%', 
-      overflowY: 'auto', 
-      backgroundColor: '#f8f9fa', 
-      borderRight: '1px solid #e0e0e0', 
-      display: 'flex', 
-      flexDirection: 'column' 
+    <aside style={{
+      width: '320px',
+      height: '100%',
+      overflowY: 'auto',
+      backgroundColor: '#f8f9fa',
+      borderRight: '1px solid #e0e0e0',
+      display: 'flex',
+      flexDirection: 'column'
     }}>
       {/* Cabecera Fija */}
-      <header style={{ 
-        padding: '12px 15px', 
-        backgroundColor: '#00473C', 
-        color: 'white', 
-        position: 'sticky', 
-        top: 0, 
+      <header style={{
+        padding: '12px 15px',
+        backgroundColor: '#00473C',
+        color: 'white',
+        position: 'sticky',
+        top: 0,
         zIndex: 10,
         boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
       }}>
@@ -72,14 +72,29 @@ export const Sidebar = ({ stores, selectedStore, setSelectedStore }) => {
                     {getCategoryIcon(store.category)}
                   </span>
                   <div style={{ flex: 1 }}>
-                    <h3 style={{ 
-                      margin: '0', 
-                      fontSize: '0.95rem', 
-                      color: '#2c3e50',
-                      lineHeight: '1.2'
-                    }}>
+                    <h3 style={{ margin: '0', fontSize: '0.95rem', color: '#2c3e50', lineHeight: '1.2' }}>
                       {store.name}
                     </h3>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '4px' }}>
+                      {store.isCustom ? (
+                        // Lógica para puntos de TU base de datos
+                        store.rating ? (
+                          <>
+                            <span style={{ color: '#FFB800', fontSize: '0.8rem' }}>
+                              {"★".repeat(Math.round(store.rating)) + "☆".repeat(5 - Math.round(store.rating))}
+                            </span>
+                            <span style={{ color: '#95a5a6', fontSize: '0.7rem' }}>({store.rating.toFixed(1)})</span>
+                          </>
+                        ) : (
+                          <span style={{ color: '#bdc3c7', fontSize: '0.7rem', fontStyle: 'italic' }}>Pendiente de valorar</span>
+                        )
+                      ) : (
+                        // Lógica para puntos de Mapbox (Supermercados, etc.)
+                        <span style={{ color: '#bdc3c7', fontSize: '0.7rem' }}>📍 Punto de interés</span>
+                      )}
+                    </div>
+
                     <p style={{ margin: '2px 0 0 0', fontSize: '0.75rem', color: '#95a5a6' }}>
                       {store.address}
                     </p>
@@ -87,26 +102,26 @@ export const Sidebar = ({ stores, selectedStore, setSelectedStore }) => {
                 </div>
 
                 {store.isCustom && (
-                  <div style={{ 
-                    marginTop: '8px', 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
+                  <div style={{
+                    marginTop: '8px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
                     alignItems: 'center',
                     borderTop: '1px solid #f0f0f0',
                     paddingTop: '8px'
                   }}>
-                    <span style={{ 
-                      fontSize: '0.65rem', 
-                      backgroundColor: '#d1e7dd', 
-                      color: '#0f5132', 
-                      padding: '2px 6px', 
-                      borderRadius: '4px', 
-                      fontWeight: 'bold' 
+                    <span style={{
+                      fontSize: '0.65rem',
+                      backgroundColor: '#d1e7dd',
+                      color: '#0f5132',
+                      padding: '2px 6px',
+                      borderRadius: '4px',
+                      fontWeight: 'bold'
                     }}>
                       COMUNIDAD
                     </span>
-                    
-                    <button 
+
+                    <button
                       onClick={(e) => {
                         e.stopPropagation();
                         navigate('/spots');
