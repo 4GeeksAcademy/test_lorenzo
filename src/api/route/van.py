@@ -61,7 +61,7 @@ def get_vehicle(car_id):
 
 
 @van.route('/vehicle/<int:car_id>', methods=['PUT'])
-@jwt_required()
+# @jwt_required()
 def update_vehicle(car_id):
     data = request.get_json()
     vehicle = Vehicle.query.get(car_id)

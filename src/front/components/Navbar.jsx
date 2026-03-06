@@ -21,7 +21,9 @@ export const Navbar = () => {
 							<input className="form-control me-2" type="search" placeholder="Search" />
 							<button className="btn btn-outline-success" type="submit">Search</button>
 						</form>
-						<button className="btn btn-primary" type="submit">Signup</button>
+						<Link to="/signup">
+							<button className="btn btn-primary" type="submit">Signup</button>
+						</Link>
 					</div>
 				</div>
 			</nav>
