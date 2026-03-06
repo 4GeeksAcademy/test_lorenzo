@@ -126,7 +126,7 @@ def get_spot_by_id(spot_id):
     else:
         data["userName"] = "Usuario desconocido"
 
-    media_list = Media_Spot.query.filter_by(post_id=spot_id).all()
+    media_list = Media_spot.query.filter_by(post_id=spot_id).all()
     data["media"] = [item.serialize() for item in media_list]
     return jsonify(data), 200
 

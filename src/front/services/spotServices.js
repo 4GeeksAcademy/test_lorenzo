@@ -1,26 +1,39 @@
 const API_URL = import.meta.env.VITE_BACKEND_URL;
 
+// # Obtener la lista completa de puntos (Spots)
 export const getAllSpots = async () => {
     try {
-        //  Limpiamos la URL por si hay dobles barras
-        const cleanUrl = `${API_URL}/api/spots`.replace(/([^:]\/)\/+/g, "$1");
-        console.log("🔍 Intentando conectar a:", cleanUrl);
+        const response = await fetch(`${API_URL}/spot/spots`); 
         
-        const response = await fetch(cleanUrl); 
-        
-        // Verificamos el tipo de contenido antes de procesar
-        const contentType = response.headers.get("content-type");
-        
-        if (contentType && contentType.includes("application/json")) {
-            return await response.json();
-        } else {
-            const errorText = await response.text();
-            console.error("❌ El servidor respondió con HTML en lugar de JSON. Probablemente un error 404 o 500 del Backend.");
-            return [];
+        if (!response.ok) {
+            console.error("Error al obtener los spots");
+            return []; // # Devuelve lista vacía si falla la API
         }
 
+        const data = await response.json();
+        return data;
+
     } catch (error) {
-        console.error("❌ Error de red o conexión:", error);
+        console.error("No se pudo conectar con el servidor:", error);
         return [];
+    }
+};
+
+// # Obtener el detalle de un solo punto por su ID
+export const getSpotById = async (id) => {
+    try {
+        const response = await fetch(`${API_URL}/spot/spots/${id}`);
+        
+        if (!response.ok) {
+            console.error("No se encontró el detalle del spot");
+            return null; // # Devuelve null si el ID no existe
+        }
+
+        const data = await response.json();
+        return data;
+
+    } catch (error) {
+        console.error("Error cargando el detalle:", error);
+        return null; 
     }
 };
