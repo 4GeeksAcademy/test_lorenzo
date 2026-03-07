@@ -2,7 +2,8 @@ export const initialStore=()=>{
   return{
     message: null,
     vans: [],
-    booking: []
+    booking: [],
+    fav_vans:[],
   }
 }
 
@@ -20,6 +21,13 @@ export default function storeReducer(store, action = {}) {
           vans: action.payload
         }
 
+    case "fav_vans":
+        return{
+          ...store,
+          fav_vans: action.payload
+
+        }
+      
     case "set_booking":
       return{
           ...store,
@@ -31,7 +39,7 @@ export default function storeReducer(store, action = {}) {
         ...store,
         booking: [...store.booking, action.payload]
       }
-    
+
     default:
       throw Error('Unknown action.');
   }    

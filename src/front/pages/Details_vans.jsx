@@ -17,7 +17,7 @@ export const DetailsVan = () => {
     const { store, dispatch } = useGlobalReducer()
 
     const days = endDate ? differenceInDays(endDate, startDate) : 0;
-    const bookingTotal = days > 0 ? (days * parseFloat(van.price_per_day)) : 0;
+    const bookingTotal = days * parseFloat(van?.price_per_day)
 
     const blockBooking = van?.booking?.map(item => {
         const start = new Date(item.start_date);
@@ -35,6 +35,8 @@ export const DetailsVan = () => {
         const vanData = await getSingleVan(id)
         setVan(vanData)
         setLoading(false)
+        console.log(vanData);
+        
     }
 
     const handleBooking = async () => {
@@ -49,6 +51,7 @@ export const DetailsVan = () => {
 
         const response = await addBooking(bookingData, dispatch)
         if (response) {
+            setStartDate(null)
             setEndDate(null)
             getVan()
         }
@@ -58,6 +61,16 @@ export const DetailsVan = () => {
         const [start, end] = dates;
         setStartDate(start);
         setEndDate(end);
+    };
+
+    const handleFavVan = () => {
+        const isFav = store.fav_vans.find(fav => fav.id === van.id);
+        if (isFav) {
+            const updatedFavs = store.fav_vans.filter(fav => fav.id !== van.id);
+            dispatch({ type: 'fav_vans', payload: updatedFavs });
+        } else {
+            dispatch({ type: 'fav_vans', payload: [...store.fav_vans, van] });
+        }
     };
 
     useEffect(() => {
@@ -131,11 +144,11 @@ export const DetailsVan = () => {
                         </div>
                         <div className="col-lg-4">
                             <div className="card border-0 shadow-lg p-4" style={{ top: "20px" }}>
-                                <h3 className="fw-bold mb-4 text-center">Reserva tu aventura</h3>
+                                <h3 className="fw-bold mb-4 text-center">Reservar</h3>
 
                                 <div className="mb-4">
                                     <label className="form-label small fw-bold text-muted text-uppercase">Selecciona tus fechas</label>
-                                    <div className="datepicker d-flex justify-content-center border rounded-3 p-2 bg-light ">
+                                    <div className="datepicker d-flex justify-content-center border rounded-3 p-2 bg-light">
                                         <DatePicker
                                             selected={startDate}
                                             onChange={handleChange}
@@ -145,7 +158,8 @@ export const DetailsVan = () => {
                                             selectsRange
                                             selectsStart
                                             excludeDateIntervals={blockBooking}
-                                            placeholderText="Seleciona los dias"
+                                            disabled={!van.available}
+                                            placeholderText={van.available ? "SELECCIONA FECHAS" : "NO DISPONIBLE"}
                                             className="form-control text-center"
                                         />
                                     </div>
@@ -169,16 +183,46 @@ export const DetailsVan = () => {
                                 <button
                                     className="btn btn-primary btn-lg w-100 fw-bold py-3 mb-3 shadow"
                                     disabled={!van.available || !endDate}
-                                    onClick={handleBooking}
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modalReserva"
                                 >
-                                    {!endDate ? 'SELECCIONA FECHAS' : van.available ? 'RESERVAR AHORA' : 'NO DISPONIBLE'}
+                                    {van.available ? 'RESERVAR AHORA' : 'NO DISPONIBLE'}
                                 </button>
 
+                                <div className="modal fade" id="modalReserva" tabIndex="-1" aria-hidden="true">
+                                    <div className="modal-dialog modal-dialog-centered">
+                                        <div className="modal-content">
+                                            <div className="modal-header">
+                                                <h5 className="modal-title">Confirmar Reserva</h5>
+                                                <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div className="modal-body">
+                                                <p>¿Estás seguro de que deseas reservar la <strong>{van.model}</strong>?</p>
+                                                <ul>
+                                                    <li><strong>Desde:</strong> {startDate?.toLocaleDateString()}</li>
+                                                    <li><strong>Hasta:</strong> {endDate?.toLocaleDateString()}</li>
+                                                </ul>
+                                            </div>
+                                            <div className="modal-footer">
+                                                <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-primary"
+                                                    onClick={handleBooking}
+                                                    data-bs-dismiss="modal"
+                                                >
+                                                    Confirmar y Pagar
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                                 <button
-                                    className="btn btn-outline-danger w-100 border-2"
-                                    onClick={() => dispatch({ type: 'fav_van', payload: van })}
+                                    className={`btn w-100 border-2 ${store.fav_vans.some(item => item.id === van.id) ? 'btn-danger' : 'btn-outline-danger'}`}
+                                    onClick={handleFavVan}
                                 >
-                                    <i className="fa-regular fa-heart me-2"></i>Añadir a favoritos
+                                    <i className={`${store.fav_vans.some(item => item.id === van.id) ? 'fa-solid' : 'fa-regular'} fa-heart me-2`}></i>
+                                    {store.fav_vans.some(item => item.id === van.id) ? 'En favoritos' : 'Añadir a favoritos'}
                                 </button>
                             </div>
                         </div>

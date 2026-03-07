@@ -11,10 +11,8 @@ CORS(van)
 
 @van.route('/vehicles', methods=['POST'])
 # @jwt_required()
-
 def create_vehicle():
     data = request.get_json()
-
     brand =data.get("brand")
     model = data.get("model")
     description = data.get("description")
