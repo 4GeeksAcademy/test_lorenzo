@@ -12,7 +12,6 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 const MAPBOX_ACCESS_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 
 export const Map = () => {
-  // # FASE 1: REFERENCIAS Y ESTADOS
   const mapRef = useRef(null);
   const mapContainerRef = useRef(null);
   const searchRef = useRef(null);
@@ -26,17 +25,16 @@ export const Map = () => {
   const [stores, setStores] = useState([]);
   const [selectedStore, setSelectedStore] = useState(null);
   const [infoModalSpotId, setInfoModalSpotId] = useState(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); 
 
-  // # FASE #1 filtros de servicios
   const [filters, setFilters] = useState({
-    water: false, 
-    sleep: false, 
-    waste: false, 
-    electricity: false, 
+    water: false,
+    sleep: false,
+    waste: false,
+    electricity: false,
     community: false 
   });
 
-  // # FASE 2: CARGA DE DATOS (NUESTRA API)
   useEffect(() => {
     const loadSpots = async () => {
       const data = await getAllSpots();
@@ -45,7 +43,6 @@ export const Map = () => {
     loadSpots();
   }, []);
 
-  // # FASE 3: LÓGICA DE FILTRADO (NUESTROS SPOTS)
   const filteredStores = useMemo(() => {
     return (stores || []).filter(store => {
       const matchWater = !filters.water || store.has_water === true;
@@ -63,38 +60,31 @@ export const Map = () => {
     });
   }, [stores, filters, searchCategory]);
 
-  // # FASE 4: INICIALIZAR MAPBOX
   useEffect(() => {
     if (mapRef.current) return;
-
     const timer = setTimeout(() => {
       mapRef.current = new mapboxgl.Map({
         accessToken: MAPBOX_ACCESS_TOKEN,
         container: mapContainerRef.current,
         style: 'mapbox://styles/mapbox/streets-v12',
-        center: [-3.70379, 40.41678], 
+        center: [-3.70379, 40.41678],
         zoom: 13
       });
-
       mapRef.current.on('load', () => {
         setMapBounds(mapRef.current.getBounds().toArray());
         setIsMapReady(true);
       });
-
       mapRef.current.on('moveend', () => {
         setMapBounds(mapRef.current.getBounds().toArray());
       });
-
       searchRef.current = new SearchBoxCore({ accessToken: MAPBOX_ACCESS_TOKEN, language: 'es' });
     }, 100);
-
     return () => {
       clearTimeout(timer);
       if (mapRef.current) mapRef.current.remove();
     };
   }, []);
 
-  // # FASE 5: NAVEGACIÓN
   useEffect(() => {
     if (selectedStore && mapRef.current) {
       const lng = selectedStore.longitude || selectedStore.geometry?.coordinates[0];
@@ -105,19 +95,14 @@ export const Map = () => {
     }
   }, [selectedStore]);
 
-  // # FASE 6: BÚSQUEDA MAPBOX (EXTERNA)
   const performCategorySearch = async () => {
     if (!searchCategory || !mapBounds || !searchRef.current) return;
-    
-    // # Si el filtro de comunidad está activo, NO buscamos fuera
     if (searchCategory === "water_waste" || filters.community) {
       setSearchResults([]);
       setShowSearchAreaButton(false);
       return;
     }
-
     const flatBbox = [mapBounds[0][0], mapBounds[0][1], mapBounds[1][0], mapBounds[1][1]];
-
     try {
       const { features } = await searchRef.current.category(searchCategory, { bbox: flatBbox, limit: 15 });
       setSearchResults(features);
@@ -128,10 +113,8 @@ export const Map = () => {
     }
   };
 
-  // # Re-buscamos si cambia la categoría O si activamos/desactivamos comunidad
   useEffect(() => { if (searchCategory) performCategorySearch(); }, [searchCategory, filters.community]);
 
-  // # FASE 7: BOTÓN "BUSCAR EN ESTA ÁREA"
   useEffect(() => {
     if (searchCategory && searchBounds) {
       const boundsChanged = JSON.stringify(mapBounds) !== JSON.stringify(searchBounds);
@@ -139,18 +122,17 @@ export const Map = () => {
     }
   }, [mapBounds, searchCategory, searchBounds]);
 
-  // # FASE 8: UNIFICACIÓN SIDEBAR (Teniendo en cuenta el filtro de comunidad)
   const unifiedListForSidebar = useMemo(() => {
     if (!mapBounds) return [];
     const [[swLng, swLat], [neLng, neLat]] = mapBounds;
-
+    
     const visibleDbSpots = filteredStores.filter(s => {
       return s.longitude >= swLng && s.longitude <= neLng && s.latitude >= swLat && s.latitude <= neLat;
     }).map(s => ({ ...s, id: `db-${s.spot_id}`, isCustom: true }));
 
-    // # Si el filtro 'community' es true, la lista de Mapbox será vacía
-    const mapboxSpots = filters.community ? [] : searchResults.map(f => ({
-      id: f.id,
+    // # CORRECCIÓN DE KEYS: Usamos f.id o un ID generado para evitar 'ext-undefined'
+    const mapboxSpots = filters.community ? [] : searchResults.map((f, index) => ({
+      id: f.id || `ext-${index}`, 
       name: f.properties.name,
       address: f.properties.full_address || f.properties.address,
       isCustom: false,
@@ -160,43 +142,46 @@ export const Map = () => {
     }));
 
     return [...visibleDbSpots, ...mapboxSpots].sort((a, b) => (b.rating || 0) - (a.rating || 0));
-  }, [filteredStores, searchResults, mapBounds, filters.community]);
+  }, [filteredStores, searchResults, mapBounds, filters.community, searchCategory]);
 
   const categoryButtons = [
-    { label: "🏕️ Áreas", value: "campground" },
+    { label: "🏕️ Áreas y Campings", value: "campground" },
     { label: "🅿️ Parking", value: "parking" },
-    { label: "💧 Vaciado", value: "water_waste" },
+    { label: "💧 Vaciado y agua", value: "water_waste" },
     { label: "⛽ Gasolineras", value: "gas_station" },
-    { label: "🛒 Súper", value: "supermarket" }
+    { label: "🛒 Supermercados", value: "supermarket" }
   ];
 
-  // # FASE 9: RENDERIZADO
   return (
-    <div style={{ display: 'flex', width: '100%', height: 'calc(100vh - 65px)', position: 'relative' }}>
-      <Sidebar
-        key={`sidebar-${unifiedListForSidebar.length}`}
-        stores={unifiedListForSidebar}
-        setSelectedStore={setSelectedStore}
-        onOpenDetail={setInfoModalSpotId}
-      />
+    <div className="map-main-container">
+      <div className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
+        <Sidebar
+          key={`sidebar-${unifiedListForSidebar.length}`}
+          stores={unifiedListForSidebar}
+          setSelectedStore={(store) => {
+            setSelectedStore(store);
+            setIsSidebarOpen(false); 
+          }}
+          onOpenDetail={setInfoModalSpotId}
+        />
+      </div>
 
-      <div style={{ flexGrow: 1, position: 'relative' }}>
-        <div className="button-container" style={{ zIndex: 100 }}>
-          {/* # BOTÓN ESPECIAL: FILTRO DE COMUNIDAD */}
+      <div className="map-wrapper" onClick={() => { if(isSidebarOpen) setIsSidebarOpen(false) }}>
+        <div className="button-container">
           <button
-            onClick={() => setFilters(prev => ({ ...prev, community: !prev.community }))}
-            className={`category-button ${filters.community ? 'active' : ''}`}
+            onClick={(e) => { e.stopPropagation(); setFilters(prev => ({ ...prev, community: !prev.community })); }}
+            className={`category-button ${filters.community ? 'active community-active' : ''}`}
             style={{ backgroundColor: filters.community ? '#00473C' : '#fff', color: filters.community ? '#fff' : '#000', fontWeight: 'bold' }}
           >
-            👥 Solo Comunidad
+            👥 Comunidad
           </button>
           
-          <div style={{ borderLeft: '1px solid #ccc', height: '25px', margin: '0 10px' }}></div>
+          <div className="separator"></div>
 
           {categoryButtons.map(({ label, value }) => (
             <button
               key={value}
-              onClick={() => setSearchCategory(value)}
+              onClick={(e) => { e.stopPropagation(); setSearchCategory(value); }}
               className={`category-button ${searchCategory === value ? 'active' : ''}`}
             >
               {label}
@@ -205,44 +190,50 @@ export const Map = () => {
         </div>
 
         {showSearchAreaButton && (
-          <button onClick={performCategorySearch} className="search-area-button">
+          <button onClick={(e) => { e.stopPropagation(); performCategorySearch(); }} className="search-area-button">
             Buscar en esta área
           </button>
         )}
 
-        {/* 1. Nuestros marcadores (Siempre visibles según sus filtros) */}
+        <button className="mobile-list-toggle" onClick={(e) => { e.stopPropagation(); setIsSidebarOpen(true); }}>
+          📋 Ver lista
+        </button>
+
+        <div ref={mapContainerRef} id="map-container" />
+
         {isMapReady && filteredStores.map((store) => (
-          <Marker
-            key={`db-${store.spot_id}`}
-            map={mapRef.current}
-            store={store}
-            onOpenDetail={setInfoModalSpotId}
+          <Marker 
+            key={`db-${store.spot_id}`} 
+            map={mapRef.current} 
+            store={store} 
+            onOpenDetail={setInfoModalSpotId} 
           />
         ))}
 
-        {/* 2. Marcadores Mapbox: SOLO si el filtro de comunidad está apagado */}
-        {isMapReady && !filters.community && searchResults.map((feature) => (
-          <Marker
-            key={`ext-${feature.id}`}
-            map={mapRef.current}
-            onOpenDetail={setInfoModalSpotId}
-            store={{
-              spot_id: feature.id,
-              name: feature.properties.name,
-              address: feature.properties.full_address || feature.properties.address,
-              longitude: feature.geometry.coordinates[0],
-              latitude: feature.geometry.coordinates[1],
-              category: searchCategory,
-              rating: 0
-            }}
-          />
-        ))}
+        {isMapReady && !filters.community && searchResults.map((feature, index) => {
+            // Generamos una key única robusta
+            const featureId = feature.id || `ext-${index}`;
+            return (
+              <Marker
+                key={`ext-${featureId}`}
+                map={mapRef.current}
+                onOpenDetail={setInfoModalSpotId}
+                store={{
+                  spot_id: featureId,
+                  name: feature.properties.name,
+                  address: feature.properties.full_address || feature.properties.address,
+                  longitude: feature.geometry.coordinates[0],
+                  latitude: feature.geometry.coordinates[1],
+                  category: searchCategory,
+                  rating: 0
+                }}
+              />
+            );
+        })}
 
         {infoModalSpotId && (
           <SpotDetailModal spotId={infoModalSpotId} onClose={() => setInfoModalSpotId(null)} />
         )}
-
-        <div ref={mapContainerRef} style={{ position: 'absolute', top: 0, bottom: 0, width: '100%' }} />
       </div>
     </div>
   );
