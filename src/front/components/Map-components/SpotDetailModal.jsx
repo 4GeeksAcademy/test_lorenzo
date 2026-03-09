@@ -1,211 +1,210 @@
 import React, { useState, useEffect } from 'react';
-import { getSpotById, createSpot } from '../../services/spotServices';
+import { getSpotById, createSpot, getAllComments, createComment } from '../../services/spotServices';
 
 export const SpotDetailModal = ({ spotId, onClose }) => {
     const [spot, setSpot] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [comments, setComments] = useState([]);
     
-    // Estados para los campos editables (Inputs)
+    // Estados del formulario 
     const [name, setName] = useState("");
     const [address, setAddress] = useState("");
     const [description, setDescription] = useState("");
     const [imageUrl, setImageUrl] = useState("");
+    const [category, setCategory] = useState("parkings");
 
-    // Identificamos si el origen es Mapbox o nuestra DB
+    // Estados de servicios (Agua, Vaciado, Luz, Pernocta)
+    const [hasWater, setHasWater] = useState(false);
+    const [hasWaste, setHasWaste] = useState(false);
+    const [hasLight, setHasLight] = useState(false);
+    const [isSleepable, setIsSleepable] = useState(false);
+
+    // Estados de reseña
+    const [newComment, setNewComment] = useState(""); 
+    const [newRating, setNewRating] = useState(5);
+
     const isExternal = typeof spotId === 'string' && !spotId.startsWith('db-');
+
+    const autoGrow = (e) => {
+        e.target.style.height = "auto";
+        e.target.style.height = (e.target.scrollHeight) + "px";
+    };
 
     useEffect(() => {
         const loadDetail = async () => {
             if (!spotId) return;
             setLoading(true);
+            const cleanId = String(spotId).replace('db-', '');
 
             if (!isExternal) {
-                // CASO 1: Es de nuestra base de datos
-                const cleanId = typeof spotId === 'string' ? spotId.replace('db-', '') : spotId;
-                const data = await getSpotById(cleanId);
-                setSpot(data);
+                const [spotData, allComments] = await Promise.all([
+                    getSpotById(cleanId),
+                    getAllComments()
+                ]);
+                setSpot(spotData);
+                setComments(allComments.filter(c => c.spot_id === parseInt(cleanId)));
                 
-                // Rellenamos estados por si acaso, aunque no los editemos aquí
-                setName(data?.name || "");
-                setAddress(data?.address || "");
-                setDescription(data?.description || "");
+                setName(spotData?.name || "");
+                setAddress(spotData?.address || "");
+                setDescription(spotData?.description || "");
+                setCategory(spotData?.category || "parkings");
+                setHasWater(spotData?.has_water || false);
+                setHasWaste(spotData?.has_waste_dump || false);
+                setHasLight(spotData?.has_electricity || false);
+                setIsSleepable(spotData?.is_sleepable || false);
             } else {
-                // CASO 2: Es de Mapbox (API EXTERNA)
-                // Usamos valores temporales. Nota: Map.jsx debería pasar coords reales si es posible.
-                const tempSpot = {
-                    name: "Nombre del sitio", 
-                    address: "Dirección por confirmar",
-                    category: "parking",
-                    isExternal: true,
-                    latitude: 40.4167, 
-                    longitude: -3.7037
-                };
-                
-                setSpot(tempSpot);
-                setName(tempSpot.name);
-                setAddress(tempSpot.address);
-                setDescription(""); 
+                setName("Nombre del sitio");
+                setAddress("Dirección por confirmar");
+                setCategory("parkings");
             }
             setLoading(false);
         };
         loadDetail();
     }, [spotId, isExternal]);
 
-    if (!spotId) return null;
-
-    const handleSaveToCommunity = async () => {
+    const handleAction = async () => {
         const token = localStorage.getItem("token");
-        if (!token) {
-            alert("Debes iniciar sesión para añadir lugares a la comunidad.");
-            return;
-        }
+        if (!token) return alert("Debes iniciar sesión");
 
-        // Enviamos los estados que el usuario ha podido editar
-        const newSpot = {
-            name: name,
-            category: spot?.category || "parking",
+        const cleanId = String(spotId).replace('db-', '');
+        const data = {
+            name, address, description, 
+            image_url: imageUrl, 
+            rating: newRating, 
+            comment: newComment,
+            category: category,
+            has_water: hasWater,
+            has_waste_dump: hasWaste,
+            has_electricity: hasLight,
+            is_sleepable: isSleepable,
             latitude: spot?.latitude || 40.4167,
-            longitude: spot?.longitude || -3.7037,
-            address: address,
-            description: description,
-            is_sleepable: true
-            // Si tu backend acepta imageUrl, añádela aquí también
+            longitude: spot?.longitude || -3.7037
         };
 
-        const result = await createSpot(newSpot);
-
-        if (result) {
-            alert("¡Genial! Has añadido un nuevo lugar.");
-            window.location.reload();
-            onClose();
+        if (isExternal) {
+            const result = await createSpot(data);
+            if (result) alert("¡Lugar añadido!");
         } else {
-            alert("No se pudo guardar. Revisa si tu sesión sigue activa.");
+            const success = await createComment(cleanId, newComment, newRating);
+            if (success) alert("¡Comentario publicado!");
         }
+        window.location.reload();
+        onClose();
     };
+
+    if (!spotId) return null;
 
     return (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }} onClick={onClose}>
             <div className="modal-dialog modal-dialog-centered modal-lg" onClick={e => e.stopPropagation()}>
-                <div className="modal-content shadow-lg border-0" style={{ borderRadius: '20px' }}>
+                <div className="modal-content shadow-lg border-0" style={{ borderRadius: '10px' }}>
 
                     {loading ? (
-                        <div className="modal-body text-center p-5">
-                            <div className="spinner-border text-success" role="status"></div>
-                            <p className="mt-2 text-muted">Cargando información...</p>
-                        </div>
+                        <div className="modal-body text-center p-5"><div className="spinner-border text-success"></div></div>
                     ) : (
                         <>
                             <div className="position-relative">
-                                {spot?.media?.[0] ? (
-                                    <img
-                                        src={spot.media[0].url}
-                                        className="img-fluid w-100"
-                                        style={{ height: '350px', objectFit: 'cover', borderTopLeftRadius: '20px', borderTopRightRadius: '20px' }}
-                                        alt={spot.name}
+                                {spot?.media?.[0]?.url || imageUrl ? (
+                                    <img 
+                                        src={spot?.media?.[0]?.url || imageUrl} 
+                                        className="img-fluid w-100" 
+                                        style={{ height: '300px', objectFit: 'cover', borderTopLeftRadius: '20px', borderTopRightRadius: '20px' }} 
                                     />
                                 ) : (
-                                    <div className="bg-light d-flex flex-column align-items-center justify-content-center" style={{ height: '250px', borderTopLeftRadius: '20px', borderTopRightRadius: '20px' }}>
+                                    <div className="bg-light d-flex flex-column align-items-center justify-content-center" style={{ height: '200px', borderTopLeftRadius: '20px', borderTopRightRadius: '20px' }}>
                                         <span style={{ fontSize: '3rem' }}>{isExternal ? '📍' : '📷'}</span>
-                                        <p className="text-muted fw-bold mt-2">
-                                            {isExternal ? 'Punto pendiente de registro' : 'Sin fotos disponibles'}
-                                        </p>
                                     </div>
                                 )}
-                                <button type="button" className="btn-close position-absolute top-0 end-0 m-3 bg-white p-2 shadow-sm rounded-circle" onClick={onClose}></button>
+                                <button className="btn-close position-absolute top-0 end-0 m-3 bg-white p-2 rounded-circle shadow-sm" onClick={onClose}></button>
                             </div>
 
                             <div className="modal-body p-4">
+                                {/* CATEGORÍA Y TÍTULOS */}
                                 <div className="mb-3">
-                                    <span className="badge bg-success bg-opacity-75 mb-2">
-                                        {isExternal ? 'Nueva entrada' : spot?.category}
-                                    </span>
-                                    
-                                    {/* Campos Editables para externos */}
-                                    {isExternal ? (
-                                        <div className="d-flex flex-column gap-2">
-                                            <input 
-                                                className="form-control fw-bold h4 mb-0" 
-                                                value={name} 
-                                                onChange={(e) => setName(e.target.value)}
-                                                placeholder="Nombre del lugar"
-                                            />
-                                            <input 
-                                                className="form-control form-control-sm" 
-                                                value={address} 
-                                                onChange={(e) => setAddress(e.target.value)}
-                                                placeholder="Dirección"
-                                            />
-                                        </div>
-                                    ) : (
-                                        <>
-                                            <h2 className="modal-title h4 fw-bold text-dark">{spot?.name}</h2>
-                                            <p className="text-muted small mb-0">📍 {spot?.address}</p>
-                                        </>
-                                    )}
+                                    <select 
+                                        className="form-select form-select-sm border-0 bg-success bg-opacity-10 text-success fw-bold w-auto mb-2" 
+                                        value={category} 
+                                        onChange={e => setCategory(e.target.value)}
+                                    >
+                                        <option value="areas y campings">🏕️ Áreas y Campings</option>
+                                        <option value="parkings">🅿️ Parkings</option>
+                                        <option value="vaciado y agua">💧 Vaciado y Agua</option>
+                                        <option value="gasolineras">⛽ Gasolineras</option>
+                                        <option value="supermercados">🛒 Supermercados</option>
+                                    </select>
+                                    <input className="form-control fw-bold h4 border-0 p-0 shadow-none mb-1" value={name} onChange={e => setName(e.target.value)} />
+                                    <p className="text-muted small mb-3">📍 {address}</p>
                                 </div>
 
                                 <hr />
 
-                                <div className="mb-4">
-                                    <h6 className="fw-bold text-dark">Descripción</h6>
-                                    {isExternal ? (
-                                        <textarea 
-                                            className="form-control form-control-sm"
-                                            rows="3"
-                                            value={description}
-                                            onChange={(e) => setDescription(e.target.value)}
-                                            placeholder="Añade detalles sobre el lugar..."
-                                        />
-                                    ) : (
-                                        <p className="text-secondary small">
-                                            {spot?.description || "Lugar verificado por la comunidad."}
-                                        </p>
-                                    )}
+                                {/* SERVICIOS (ESTILO ICONOS QUE TE GUSTABA) */}
+                                <h6 className="fw-bold small text-muted text-uppercase mb-2">Servicios</h6>
+                                <div className="row g-2 text-center mb-4">
+                                    <div className="col-3">
+                                        <div 
+                                            onClick={() => setHasWater(!hasWater)}
+                                            className={`p-2 rounded small cursor-pointer ${hasWater ? 'bg-success bg-opacity-10 text-success fw-bold border border-success' : 'bg-light text-muted border'}`}
+                                            style={{ cursor: 'pointer' }}
+                                        >💧 Agua</div>
+                                    </div>
+                                    <div className="col-3">
+                                        <div 
+                                            onClick={() => setHasWaste(!hasWaste)}
+                                            className={`p-2 rounded small cursor-pointer ${hasWaste ? 'bg-success bg-opacity-10 text-success fw-bold border border-success' : 'bg-light text-muted'}`}
+                                            style={{ cursor: 'pointer' }}
+                                        >🗑️ Vaciado</div>
+                                    </div>
+                                    <div className="col-3">
+                                        <div 
+                                            onClick={() => setHasLight(!hasLight)}
+                                            className={`p-2 rounded small cursor-pointer ${hasLight ? 'bg-success bg-opacity-10 text-success fw-bold border border-success' : 'bg-light text-muted'}`}
+                                            style={{ cursor: 'pointer' }}
+                                        >⚡ Luz</div>
+                                    </div>
+                                    <div className="col-3">
+                                        <div 
+                                            onClick={() => setIsSleepable(!isSleepable)}
+                                            className={`p-2 rounded small cursor-pointer ${isSleepable ? 'bg-success bg-opacity-10 text-success fw-bold border border-success' : 'bg-light text-muted'}`}
+                                            style={{ cursor: 'pointer' }}
+                                        >🚐 Pernocta</div>
+                                    </div>
                                 </div>
 
-                                {!isExternal ? (
-                                    <div className="row g-2 text-center">
-                                        <div className="col-3">
-                                            <div className={`p-2 rounded small ${spot?.has_water ? 'bg-success bg-opacity-10 text-success' : 'bg-light text-muted'}`}>💧 Agua</div>
-                                        </div>
-                                        <div className="col-3">
-                                            <div className={`p-2 rounded small ${spot?.has_waste_dump ? 'bg-success bg-opacity-10 text-success' : 'bg-light text-muted'}`}>🗑️ Vaciado</div>
-                                        </div>
-                                        <div className="col-3">
-                                            <div className={`p-2 rounded small ${spot?.has_electricity ? 'bg-success bg-opacity-10 text-success' : 'bg-light text-muted'}`}>⚡ Luz</div>
-                                        </div>
-                                        <div className="col-3">
-                                            <div className={`p-2 rounded small ${spot?.is_sleepable ? 'bg-success bg-opacity-10 text-success' : 'bg-light text-muted'}`}>🚐 Pernocta</div>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="p-3 border rounded bg-light">
-                                        <label className="form-label small fw-bold text-muted mb-1">URL de la foto (opcional):</label>
-                                        <input
-                                            type="text"
-                                            className="form-control form-control-sm"
-                                            placeholder="https://ejemplo.com/foto.jpg"
-                                            value={imageUrl}
-                                            onChange={(e) => setImageUrl(e.target.value)}
-                                        />
-                                    </div>
-                                )}
-                            </div>
+                                <h6 className="fw-bold small text-muted text-uppercase mb-2">Descripción</h6>
+                                <textarea className="form-control border-0 bg-light mb-4" rows="1" style={{ resize: 'none', overflow: 'hidden' }} value={description} onChange={e => { setDescription(e.target.value); autoGrow(e); }} placeholder="Información útil..." />
 
-                            <div className="modal-footer bg-light border-0 px-4 py-3" style={{ borderBottomLeftRadius: '20px', borderBottomRightRadius: '20px' }}>
-                                {isExternal ? (
-                                    <div className="w-100 d-flex justify-content-between align-items-center">
-                                        <span className="text-muted small">Personaliza los datos antes de guardar</span>
-                                        <button className="btn btn-success fw-bold px-4 shadow-sm" onClick={handleSaveToCommunity}>
-                                            ➕ Añadir a la comunidad
-                                        </button>
+                                {/* VALORACIÓN Y COMENTARIO */}
+                                <div className="bg-light p-3 rounded border mb-4 shadow-sm">
+                                    <h6 className="fw-bold small mb-3 text-uppercase">Tu Opinión</h6>
+                                    <div className="d-flex gap-2">
+                                        <select className="form-select form-select-sm w-25 border-0 shadow-sm" value={newRating} onChange={e => setNewRating(parseInt(e.target.value))}>
+                                            {[5,4,3,2,1].map(n => <option key={n} value={n}>{n} ★</option>)}
+                                        </select>
+                                        <textarea className="form-control form-control-sm border-0 shadow-sm" rows="1" style={{ resize: 'none', overflow: 'hidden' }} value={newComment} onChange={e => { setNewComment(e.target.value); autoGrow(e); }} placeholder="¿Qué tal el sitio?..." />
                                     </div>
-                                ) : (
-                                    <div className="w-100 d-flex justify-content-between align-items-center">
-                                        <small className="text-muted text-truncate">Publicado por: <strong>{spot?.userName || 'Usuario'}</strong></small>
-                                        <button className="btn btn-outline-secondary btn-sm" onClick={onClose}>Cerrar</button>
+                                </div>
+
+                                {/* LISTA DE COMENTARIOS (Solo si existen) */}
+                                {!isExternal && comments.length > 0 && (
+                                    <div className="mb-4">
+                                        <h6 className="fw-bold small text-muted text-uppercase mb-3">Reseñas</h6>
+                                        <div className="pe-2" style={{ maxHeight: '150px', overflowY: 'auto' }}>
+                                            {comments.map(c => (
+                                                <div key={c.coment_id} className="small bg-white p-2 rounded mb-2 border shadow-sm border-start border-success border-3">
+                                                    <strong>Usuario {c.user_id}</strong> ({c.rating}★) - {c.coment_text}
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
                                 )}
+
+                                <label className="fw-bold small text-muted text-uppercase mb-1" style={{ fontSize: '0.7rem' }}>URL Imagen</label>
+                                <input className="form-control form-control-sm border-0 bg-light mb-4" value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="https://..." />
+
+                                <button className="btn btn-success w-100 fw-bold py-2 shadow-sm" onClick={handleAction}>
+                                    {isExternal ? "➕ GUARDAR EN LA COMUNIDAD" : "💾 ACTUALIZAR DATOS / COMENTAR"}
+                                </button>
                             </div>
                         </>
                     )}
