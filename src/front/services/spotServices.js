@@ -13,6 +13,20 @@ export const getAllSpots = async () => {
     }
 };
 
+export const SpotData = async (dispatch) =>{
+    const data = await getAllSpots()
+
+    if (data && Array.isArray(data)) {
+            dispatch({
+                type: "set_spot",
+                payload: data
+            });
+            console.log("Spots cargados en el store");
+        } else {
+            console.log("No se recibieron spots");
+        }
+};
+
 // # para obtener el detalle de un solo punto por su ID
 export const getSpotById = async (id) => {
     try {
