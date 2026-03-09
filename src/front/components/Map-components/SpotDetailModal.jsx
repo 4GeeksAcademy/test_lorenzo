@@ -4,6 +4,12 @@ import { getSpotById, createSpot } from '../../services/spotServices';
 export const SpotDetailModal = ({ spotId, onClose }) => {
     const [spot, setSpot] = useState(null);
     const [loading, setLoading] = useState(true);
+    
+    // Estados para los campos editables (Inputs)
+    const [name, setName] = useState("");
+    const [address, setAddress] = useState("");
+    const [description, setDescription] = useState("");
+    const [imageUrl, setImageUrl] = useState("");
 
     // Identificamos si el origen es Mapbox o nuestra DB
     const isExternal = typeof spotId === 'string' && !spotId.startsWith('db-');
@@ -18,17 +24,27 @@ export const SpotDetailModal = ({ spotId, onClose }) => {
                 const cleanId = typeof spotId === 'string' ? spotId.replace('db-', '') : spotId;
                 const data = await getSpotById(cleanId);
                 setSpot(data);
+                
+                // Rellenamos estados por si acaso, aunque no los editemos aquí
+                setName(data?.name || "");
+                setAddress(data?.address || "");
+                setDescription(data?.description || "");
             } else {
                 // CASO 2: Es de Mapbox (API EXTERNA)
-                // Buscamos los datos básicos que Mapbox ya cargó en el mapa
-                // Si tienes un estado global con todos los resultados, podrías buscarlo aquí.
-                // Por ahora, creamos el objeto temporal para que no explote el render.
-                setSpot({
-                    name: "Lugar de Mapbox",
-                    address: "Dirección de la zona",
+                // Usamos valores temporales. Nota: Map.jsx debería pasar coords reales si es posible.
+                const tempSpot = {
+                    name: "Nombre del sitio", 
+                    address: "Dirección por confirmar",
                     category: "parking",
-                    isExternal: true
-                });
+                    isExternal: true,
+                    latitude: 40.4167, 
+                    longitude: -3.7037
+                };
+                
+                setSpot(tempSpot);
+                setName(tempSpot.name);
+                setAddress(tempSpot.address);
+                setDescription(""); 
             }
             setLoading(false);
         };
@@ -38,31 +54,29 @@ export const SpotDetailModal = ({ spotId, onClose }) => {
     if (!spotId) return null;
 
     const handleSaveToCommunity = async () => {
-        // Obtenemos el token para avisar al usuario ANTES de enviar si no está logueado
         const token = localStorage.getItem("token");
         if (!token) {
             alert("Debes iniciar sesión para añadir lugares a la comunidad.");
             return;
         }
 
+        // Enviamos los estados que el usuario ha podido editar
         const newSpot = {
-            name: spot?.name || "Lugar nuevo",
+            name: name,
             category: spot?.category || "parking",
-            // IMPORTANTE: Asegúrate de que tu Map.jsx esté pasando las coordenadas
-            // Si spot no las tiene, el backend dará error 400.
-            latitude: spot?.latitude || 40.4167, 
+            latitude: spot?.latitude || 40.4167,
             longitude: spot?.longitude || -3.7037,
-            address: spot?.address || "Añadido desde el mapa",
-            description: "Registrado desde búsqueda externa de Mapbox",
-            is_sleepable: true 
+            address: address,
+            description: description,
+            is_sleepable: true
+            // Si tu backend acepta imageUrl, añádela aquí también
         };
 
         const result = await createSpot(newSpot);
-        
+
         if (result) {
             alert("¡Genial! Has añadido un nuevo lugar.");
-            // Recargamos para que el pin cambie de color (de externo a comunidad)
-            window.location.reload(); 
+            window.location.reload();
             onClose();
         } else {
             alert("No se pudo guardar. Revisa si tu sesión sigue activa.");
@@ -73,7 +87,7 @@ export const SpotDetailModal = ({ spotId, onClose }) => {
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }} onClick={onClose}>
             <div className="modal-dialog modal-dialog-centered modal-lg" onClick={e => e.stopPropagation()}>
                 <div className="modal-content shadow-lg border-0" style={{ borderRadius: '20px' }}>
-                    
+
                     {loading ? (
                         <div className="modal-body text-center p-5">
                             <div className="spinner-border text-success" role="status"></div>
@@ -81,20 +95,19 @@ export const SpotDetailModal = ({ spotId, onClose }) => {
                         </div>
                     ) : (
                         <>
-                            {/* Cabecera con Imagen */}
                             <div className="position-relative">
                                 {spot?.media?.[0] ? (
-                                    <img 
-                                        src={spot.media[0].url} 
-                                        className="img-fluid w-100" 
-                                        style={{ height: '350px', objectFit: 'cover', borderTopLeftRadius: '20px', borderTopRightRadius: '20px' }} 
-                                        alt={spot.name} 
+                                    <img
+                                        src={spot.media[0].url}
+                                        className="img-fluid w-100"
+                                        style={{ height: '350px', objectFit: 'cover', borderTopLeftRadius: '20px', borderTopRightRadius: '20px' }}
+                                        alt={spot.name}
                                     />
                                 ) : (
                                     <div className="bg-light d-flex flex-column align-items-center justify-content-center" style={{ height: '250px', borderTopLeftRadius: '20px', borderTopRightRadius: '20px' }}>
                                         <span style={{ fontSize: '3rem' }}>{isExternal ? '📍' : '📷'}</span>
                                         <p className="text-muted fw-bold mt-2">
-                                            {isExternal ? 'Este punto aún no tiene fotos' : 'Sin fotos disponibles'}
+                                            {isExternal ? 'Punto pendiente de registro' : 'Sin fotos disponibles'}
                                         </p>
                                     </div>
                                 )}
@@ -102,18 +115,32 @@ export const SpotDetailModal = ({ spotId, onClose }) => {
                             </div>
 
                             <div className="modal-body p-4">
-                                <div className="d-flex justify-content-between align-items-start mb-3">
-                                    <div>
-                                        <span className="badge bg-success bg-opacity-75 mb-2">
-                                            {isExternal ? 'Sugerencia Mapbox' : spot?.category}
-                                        </span>
-                                        <h2 className="modal-title h4 fw-bold text-dark">{spot?.name}</h2>
-                                        <p className="text-muted small mb-0">📍 {spot?.address}</p>
-                                    </div>
-                                    {!isExternal && (
-                                        <div className="bg-warning bg-opacity-10 p-2 rounded text-center" style={{ minWidth: '60px' }}>
-                                            <span className="h5 text-warning fw-bold mb-0">★ {spot?.rating?.toFixed(1) || '0.0'}</span>
+                                <div className="mb-3">
+                                    <span className="badge bg-success bg-opacity-75 mb-2">
+                                        {isExternal ? 'Nueva entrada' : spot?.category}
+                                    </span>
+                                    
+                                    {/* Campos Editables para externos */}
+                                    {isExternal ? (
+                                        <div className="d-flex flex-column gap-2">
+                                            <input 
+                                                className="form-control fw-bold h4 mb-0" 
+                                                value={name} 
+                                                onChange={(e) => setName(e.target.value)}
+                                                placeholder="Nombre del lugar"
+                                            />
+                                            <input 
+                                                className="form-control form-control-sm" 
+                                                value={address} 
+                                                onChange={(e) => setAddress(e.target.value)}
+                                                placeholder="Dirección"
+                                            />
                                         </div>
+                                    ) : (
+                                        <>
+                                            <h2 className="modal-title h4 fw-bold text-dark">{spot?.name}</h2>
+                                            <p className="text-muted small mb-0">📍 {spot?.address}</p>
+                                        </>
                                     )}
                                 </div>
 
@@ -121,14 +148,22 @@ export const SpotDetailModal = ({ spotId, onClose }) => {
 
                                 <div className="mb-4">
                                     <h6 className="fw-bold text-dark">Descripción</h6>
-                                    <p className="text-secondary small">
-                                        {isExternal 
-                                            ? "Este lugar ha sido localizado mediante la búsqueda de Mapbox. No tenemos detalles sobre servicios todavía. ¡Regístralo para completar la ficha!"
-                                            : (spot?.description || "Lugar verificado por la comunidad.")}
-                                    </p>
+                                    {isExternal ? (
+                                        <textarea 
+                                            className="form-control form-control-sm"
+                                            rows="3"
+                                            value={description}
+                                            onChange={(e) => setDescription(e.target.value)}
+                                            placeholder="Añade detalles sobre el lugar..."
+                                        />
+                                    ) : (
+                                        <p className="text-secondary small">
+                                            {spot?.description || "Lugar verificado por la comunidad."}
+                                        </p>
+                                    )}
                                 </div>
 
-                                {!isExternal && (
+                                {!isExternal ? (
                                     <div className="row g-2 text-center">
                                         <div className="col-3">
                                             <div className={`p-2 rounded small ${spot?.has_water ? 'bg-success bg-opacity-10 text-success' : 'bg-light text-muted'}`}>💧 Agua</div>
@@ -143,14 +178,24 @@ export const SpotDetailModal = ({ spotId, onClose }) => {
                                             <div className={`p-2 rounded small ${spot?.is_sleepable ? 'bg-success bg-opacity-10 text-success' : 'bg-light text-muted'}`}>🚐 Pernocta</div>
                                         </div>
                                     </div>
+                                ) : (
+                                    <div className="p-3 border rounded bg-light">
+                                        <label className="form-label small fw-bold text-muted mb-1">URL de la foto (opcional):</label>
+                                        <input
+                                            type="text"
+                                            className="form-control form-control-sm"
+                                            placeholder="https://ejemplo.com/foto.jpg"
+                                            value={imageUrl}
+                                            onChange={(e) => setImageUrl(e.target.value)}
+                                        />
+                                    </div>
                                 )}
                             </div>
 
-                            {/* Footer con lógica de registro */}
                             <div className="modal-footer bg-light border-0 px-4 py-3" style={{ borderBottomLeftRadius: '20px', borderBottomRightRadius: '20px' }}>
                                 {isExternal ? (
                                     <div className="w-100 d-flex justify-content-between align-items-center">
-                                        <span className="text-muted small">¿Conoces este sitio?</span>
+                                        <span className="text-muted small">Personaliza los datos antes de guardar</span>
                                         <button className="btn btn-success fw-bold px-4 shadow-sm" onClick={handleSaveToCommunity}>
                                             ➕ Añadir a la comunidad
                                         </button>

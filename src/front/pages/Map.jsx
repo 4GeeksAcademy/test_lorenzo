@@ -87,10 +87,10 @@ export const Map = () => {
 
   useEffect(() => {
     if (selectedStore && mapRef.current) {
-      const lng = selectedStore.longitude || selectedStore.geometry?.coordinates[0];
-      const lat = selectedStore.latitude || selectedStore.geometry?.coordinates[1];
-      if (lng && lat) {
-        mapRef.current.flyTo({ center: [lng, lat], zoom: 14, essential: true });
+      const longitude = selectedStore.longitude || selectedStore.geometry?.coordinates[0];
+      const latitude = selectedStore.latitude || selectedStore.geometry?.coordinates[1];
+      if (longitude && latitude) {
+        mapRef.current.flyTo({ center: [longitude, latitude], zoom: 14, essential: true });
       }
     }
   }, [selectedStore]);
