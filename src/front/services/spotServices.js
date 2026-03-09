@@ -24,3 +24,17 @@ export const getAllSpots = async () => {
         return [];
     }
 };
+
+export const SpotData = async (dispatch) =>{
+    const data = await getAllSpots()
+
+    if (data && Array.isArray(data)) {
+            dispatch({
+                type: "set_spot",
+                payload: data
+            });
+            console.log("Spots cargados en el store");
+        } else {
+            console.log("No se recibieron spots");
+        }
+}

@@ -2,6 +2,7 @@ export const initialStore=()=>{
   return{
     message: null,
     vans: [],
+    spot:[],
     booking: [],
     fav_vans:[],
   }
@@ -27,6 +28,12 @@ export default function storeReducer(store, action = {}) {
           fav_vans: action.payload
 
         }
+    
+    case "set_spot":
+      return{
+        ...store,
+        spot: action.payload
+      }
       
     case "set_booking":
       return{
