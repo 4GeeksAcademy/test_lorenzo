@@ -1,7 +1,10 @@
 export const initialStore=()=>{
   return{
     message: null,
-    vans: []
+    vans: [],
+    spot:[],
+    booking: [],
+    fav_vans:[],
   }
 }
 
@@ -13,20 +16,37 @@ export default function storeReducer(store, action = {}) {
         message: action.payload
       };
 
-      case "set_vans":
+    case "set_vans":
         return {
           ...store,
           vans: action.payload
         }
-      
-    case 'add_task':
 
-      const { id,  color } = action.payload
+    case "fav_vans":
+        return{
+          ...store,
+          fav_vans: action.payload
 
-      return {
+        }
+    
+    case "set_spot":
+      return{
         ...store,
-        todos: store.todos.map((todo) => (todo.id === id ? { ...todo, background: color } : todo))
-      };
+        spot: action.payload
+      }
+      
+    case "set_booking":
+      return{
+          ...store,
+          booking: action.payload
+      }
+    
+    case "add_booking":
+      return{
+        ...store,
+        booking: [...store.booking, action.payload]
+      }
+
     default:
       throw Error('Unknown action.');
   }    

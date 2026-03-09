@@ -11,29 +11,25 @@ booking = Blueprint('booking_bp', __name__)
 CORS(booking)
 
 
-@booking.route('/create', methods=['POST'])
-@jwt_required()
+@booking.route('/add', methods=['POST'])
+# @jwt_required()
 def create_booking():
     data = request.get_json()
 
     required_fields = ["user_id", "car_id", "start_date", "end_date"]
     if not all(field in data for field in required_fields):
-        return jsonify({"msg": "Faltan datos obligatorios"}), 400
+        return jsonify({"error": "Faltan datos obligatorios"}), 400
 
     vehicle = Vehicle.query.get(data['car_id'])
     if not vehicle:
-        return jsonify({"msg": "El vehículo no existe"}), 400
+        return jsonify({"error": "El vehículo no existe"}), 400
 
-    try:
-        start_date = datetime.strptime(data['start_date'], '%Y-%m-%d').date()
-        end_date = datetime.strptime(data['end_date'], '%Y-%m-%d').date()
+    start_date = datetime.strptime(data['start_date'], '%Y-%m-%d').date()
+    end_date = datetime.strptime(data['end_date'], '%Y-%m-%d').date()
 
-        if start_date >= end_date:
-            return jsonify({"msg": "La fecha de inicio debe ser anterior a la final"}), 400
-    except (ValueError, TypeError):
-        return jsonify({"msg": "Formato de fecha inválido. Usa YYYY-MM-DD"}), 400
-
-
+    if start_date >= end_date:
+        return jsonify({"msg": "La fecha de inicio debe ser anterior a la final"}), 400
+   
     overlap = Booking.query.filter(
         Booking.car_id == data['car_id'],
         Booking.status != "cancelled",
@@ -42,19 +38,18 @@ def create_booking():
     ).first()
 
     if overlap:
-        return jsonify({"msg": "El vehículo ya está reservado en esas fechas"}), 409
+        return jsonify({"error": "El vehiculo ya esta reservado en esas fechas"}), 409
 
     days = (end_date - start_date).days
     calculated_price = days * vehicle.price_per_day
 
-  
     new_booking = Booking(
         user_id = data['user_id'],
         car_id = data['car_id'],
         start_date = start_date,
         end_date = end_date,
         total_price = calculated_price,
-        status = "pending"
+        status = data.get("status")
     )
 
     db.session.add(new_booking)
@@ -63,7 +58,7 @@ def create_booking():
     return jsonify(new_booking.serialize()), 201
 
 @booking.route('/all', methods=['GET'])
-@jwt_required()
+# @jwt_required()
 def get_all_bookings():
     all_bookings = Booking.query.all()
 
@@ -80,7 +75,7 @@ def get_all_bookings():
 
 
 @booking.route('/user/<int:user_id>', methods=['GET'])
-@jwt_required()
+# @jwt_required()
 def get_user_bookings(user_id):
     user_bookings = Booking.query.filter_by(user_id=user_id).all()
 
@@ -91,15 +86,15 @@ def get_user_bookings(user_id):
     return jsonify(results), 200
 
 @booking.route('/cancel/<int:booking_id>', methods=['PUT'])
-@jwt_required()
+# @jwt_required()
 def cancel_booking(booking_id):
     booking_to_cancel = Booking.query.get(booking_id)
 
     if not booking_to_cancel:
-        return jsonify({"msg": "La reserva no existe"}), 404
+        return jsonify({"error": "La reserva no existe"}), 404
 
     if booking_to_cancel.status == "cancelled":
-        return jsonify({"msg": "Esta reserva ya fue cancelada anteriormente"}), 400
+        return jsonify({"error": "Esta reserva ya fue cancelada anteriormente"}), 400
 
     booking_to_cancel.status = "cancelled"
     db.session.commit()

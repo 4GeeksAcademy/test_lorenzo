@@ -79,7 +79,8 @@ class Vehicle(db.Model):
             "type_vehicle": self.type_vehicle,
             "price_per_day": float(self.price_per_day) if self.price_per_day is not None else None,
             "available": self.available,
-            "media": [item.serialize() for item in self.media]
+            "media": [item.serialize() for item in self.media],
+            "booking" : [item.serialize() for item in self.booking if item.status != "cancelled"]
         }
     
 class Media_vehicle(db.Model):

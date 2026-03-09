@@ -11,10 +11,8 @@ CORS(van)
 
 @van.route('/vehicles', methods=['POST'])
 # @jwt_required()
-
 def create_vehicle():
     data = request.get_json()
-
     brand =data.get("brand")
     model = data.get("model")
     description = data.get("description")
@@ -61,7 +59,7 @@ def get_vehicle(car_id):
 
 
 @van.route('/vehicle/<int:car_id>', methods=['PUT'])
-@jwt_required()
+# @jwt_required()
 def update_vehicle(car_id):
     data = request.get_json()
     vehicle = Vehicle.query.get(car_id)
