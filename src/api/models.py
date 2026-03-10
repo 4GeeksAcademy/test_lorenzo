@@ -20,9 +20,10 @@ class User(db.Model):
     email: Mapped[str] = mapped_column(
         String(120), unique=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(nullable=False)
+    user_name:Mapped[str] = mapped_column(String(120), unique=True, nullable=True)
     name: Mapped[str] = mapped_column(String(120), nullable=True)
     last_name: Mapped[str] = mapped_column(String(120), nullable=True)
-    phone: Mapped[int] = mapped_column(unique=True, nullable=True)
+    phone: Mapped[str] = mapped_column(String(20), unique=True, nullable=True)
     address: Mapped[str] = mapped_column(String(120), nullable=True)
     # is_active: Mapped[bool] = mapped_column(Boolean(), nullable=False)
 
@@ -46,6 +47,7 @@ class User(db.Model):
         return {
             "id": self.id,
             "email": self.email,
+            "user_name":self.user_name,
             "name": self.name,
             "last_name": self.last_name,
             "phone": self.phone,

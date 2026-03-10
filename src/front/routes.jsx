@@ -14,6 +14,7 @@ import { Map } from "./pages/Map";
 import { All_vans } from "./pages/All_vans";
 import { Spots } from "./pages/Spots";
 import { DetailsVan } from "./pages/Details_vans";
+import { Login } from "./pages/Login";
 
 export const router = createBrowserRouter(
     createRoutesFromElements(
@@ -35,6 +36,7 @@ export const router = createBrowserRouter(
         <Route path="/vans" element={<All_vans />} />
         <Route path="/vans/:id" element={<DetailsVan />} />
         <Route path="/spots" element={<Spots />} />
+        <Route path="/login" element={<Login />}></Route>
       </Route>
     )
 );
