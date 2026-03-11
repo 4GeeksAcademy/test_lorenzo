@@ -69,3 +69,4 @@ export default function storeReducer(store, action = {}) {
       throw Error('Unknown action.');
   }    
 }
+
