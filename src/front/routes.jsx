@@ -13,11 +13,8 @@ import { Signup } from "./pages/Signup";
 import { Map } from "./pages/Map";
 import { All_vans } from "./pages/All_vans";
 import { DetailsVan } from "./pages/Details_vans";
-<<<<<<< login-frontend
 import { Login } from "./pages/Login";
-=======
 import { UserPage } from "./pages/UserPage";
->>>>>>> develop
 
 export const router = createBrowserRouter(
     createRoutesFromElements(
@@ -38,12 +35,8 @@ export const router = createBrowserRouter(
         <Route path="/map" element={<Map />} />
         <Route path="/vans" element={<All_vans />} />
         <Route path="/vans/:id" element={<DetailsVan />} />
-<<<<<<< login-frontend
-        <Route path="/spots" element={<Spots />} />
         <Route path="/login" element={<Login />}></Route>
-=======
         <Route path="/user" element={<UserPage />} />
->>>>>>> develop
       </Route>
     )
 );
