@@ -125,13 +125,70 @@
     box-shadow: 0 4px 10px rgba(0,0,0,0.3);
   }
   .category-button {
-    padding: 6px 10px; /* Reducimos el relleno */
-    font-size: 0.75rem; /* Letra más pequeña */
+    padding: 6px 10px; 
+    font-size: 0.75rem; 
   }
   .button-container {
-    padding-left: 15px; /* Deja un margen al principio */
-    padding-right: 50px; /* Deja aire al final para que se note que hay más botones */
+    padding-left: 15px; 
+    padding-right: 50px;
   }
 }
 
 .mobile-list-toggle { display: none; }
+
+/* ---- BUSQUEDA MAPA (Actualizado) ---- */
+
+.search-center-container {
+  position: absolute;
+  top: 65px; /* Ajustado para que quede justo bajo la fila de botones */
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.search-box-wrapper {
+  width: 100%;
+  max-width: 400px;
+  padding: 0 20px;
+  pointer-events: auto;
+}
+
+/* Aplicamos tu estilo de botones al componente de Mapbox */
+mapbox-search-box {
+  --mapbox-search-box-border-radius: 9999px; /* Redondeado igual que tus botones */
+  --mapbox-search-box-border: 1px solid #e5e7eb; /* Borde igual que .category-button */
+  --mapbox-search-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); /* Sombra igual */
+  font-family: inherit;
+}
+
+/* Efecto al hacer foco, similar a tus botones */
+mapbox-search-box:focus-within {
+  --mapbox-search-box-border: 1px solid var(--color-sg-green);
+}
+
+/* --- BOTÓN BUSCAR EN ESTA ÁREA (Posición central) --- */
+.search-area-button {
+  position: absolute; 
+  top: 130px; /* Lo bajamos para que quede libre debajo del buscador */
+  left: 50%; 
+  transform: translateX(-50%); 
+  z-index: 500;
+  background-color: var(--color-sg-green);
+  color: white;
+  padding: 8px 20px;
+  border-radius: 25px;
+  border: none;
+  font-weight: bold;
+  font-size: 0.8rem;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.search-area-button:hover {
+  transform: translateX(-50%) scale(1.05);
+  background-color: #00332b; /* Un verde un poco más oscuro al pasar el mouse */
+}

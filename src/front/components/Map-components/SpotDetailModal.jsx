@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { getSpotById, createSpot, getAllComments, createComment } from '../../services/spotServices';
 
-export const SpotDetailModal = ({ spotId, onClose }) => {
+export const SpotDetailModal = ({ spotId, externalData, onClose, onSuccess, allSpots }) => {
     const [spot, setSpot] = useState(null);
     const [loading, setLoading] = useState(true);
     const [comments, setComments] = useState([]);
-    
+
     // Estados del formulario 
     const [name, setName] = useState("");
     const [address, setAddress] = useState("");
@@ -13,15 +13,20 @@ export const SpotDetailModal = ({ spotId, onClose }) => {
     const [imageUrl, setImageUrl] = useState("");
     const [category, setCategory] = useState("parkings");
 
-    // Estados de servicios (Agua, Vaciado, Luz, Pernocta)
+    // Coordenadas
+    const [lat, setLat] = useState(null);
+    const [lng, setLng] = useState(null);
+
+    // Estados de servicios
     const [hasWater, setHasWater] = useState(false);
     const [hasWaste, setHasWaste] = useState(false);
     const [hasLight, setHasLight] = useState(false);
     const [isSleepable, setIsSleepable] = useState(false);
 
-    // Estados de reseña
-    const [newComment, setNewComment] = useState(""); 
+    // Estados de reseña y error
+    const [newComment, setNewComment] = useState("");
     const [newRating, setNewRating] = useState(5);
+    const [errorMessage, setErrorMessage] = useState("");
 
     const isExternal = typeof spotId === 'string' && !spotId.startsWith('db-');
 
@@ -43,7 +48,7 @@ export const SpotDetailModal = ({ spotId, onClose }) => {
                 ]);
                 setSpot(spotData);
                 setComments(allComments.filter(c => c.spot_id === parseInt(cleanId)));
-                
+
                 setName(spotData?.name || "");
                 setAddress(spotData?.address || "");
                 setDescription(spotData?.description || "");
@@ -52,47 +57,73 @@ export const SpotDetailModal = ({ spotId, onClose }) => {
                 setHasWaste(spotData?.has_waste_dump || false);
                 setHasLight(spotData?.has_electricity || false);
                 setIsSleepable(spotData?.is_sleepable || false);
+                setLat(spotData?.latitude);
+                setLng(spotData?.longitude);
             } else {
-                setName("Nombre del sitio");
-                setAddress("Dirección por confirmar");
+                setName(externalData?.name || "Sitio sin nombre");
+                setAddress(externalData?.address || "Dirección no disponible");
                 setCategory("parkings");
+                setLat(externalData?.latitude);
+                setLng(externalData?.longitude);
             }
             setLoading(false);
         };
         loadDetail();
-    }, [spotId, isExternal]);
+    }, [spotId, isExternal, externalData]);
 
     const handleAction = async () => {
-        const token = localStorage.getItem("token");
-        if (!token) return alert("Debes iniciar sesión");
-
-        const cleanId = String(spotId).replace('db-', '');
+        // Validación: No permitir comentarios vacíos
+        if (!newComment.trim()) {
+            setErrorMessage("⚠️ Por favor, escribe un comentario para tu reseña.");
+            return;
+        }
+        
+        setErrorMessage(""); 
+        
         const data = {
-            name, address, description, 
-            image_url: imageUrl, 
-            rating: newRating, 
-            comment: newComment,
+            name,
+            address,
+            description,
+            image_url: imageUrl,
+            rating: newRating,
+            coment_text: newComment,
             category: category,
             has_water: hasWater,
             has_waste_dump: hasWaste,
             has_electricity: hasLight,
             is_sleepable: isSleepable,
-            latitude: spot?.latitude || 40.4167,
-            longitude: spot?.longitude || -3.7037
+            latitude: lat,
+            longitude: lng
         };
 
         if (isExternal) {
             const result = await createSpot(data);
-            if (result) alert("¡Lugar añadido!");
+            if (result) {
+                alert("¡Lugar guardado en la comunidad!");
+                if (onSuccess) onSuccess();
+                onClose();
+            } else {
+                setErrorMessage("❌ Error al guardar. Revisa tu conexión o el usuario.");
+            }
         } else {
+            const cleanId = String(spotId).replace('db-', '');
             const success = await createComment(cleanId, newComment, newRating);
-            if (success) alert("¡Comentario publicado!");
+            if (success) {
+                alert("¡Reseña añadida!");
+                if (onSuccess) onSuccess();
+                onClose();
+            } else {
+                setErrorMessage("❌ No se pudo enviar la reseña (¿estás logueado?)");
+            }
         }
-        window.location.reload();
-        onClose();
     };
 
     if (!spotId) return null;
+
+    const isAlreadySaved = allSpots.some((savedSpot) => {
+        const currentName = externalData?.name || spot?.name;
+        return savedSpot.name === currentName;
+    });
 
     return (
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }} onClick={onClose}>
@@ -105,13 +136,9 @@ export const SpotDetailModal = ({ spotId, onClose }) => {
                         <>
                             <div className="position-relative">
                                 {spot?.media?.[0]?.url || imageUrl ? (
-                                    <img 
-                                        src={spot?.media?.[0]?.url || imageUrl} 
-                                        className="img-fluid w-100" 
-                                        style={{ height: '300px', objectFit: 'cover', borderTopLeftRadius: '20px', borderTopRightRadius: '20px' }} 
-                                    />
+                                    <img src={spot?.media?.[0]?.url || imageUrl} className="img-fluid w-100" style={{ height: '300px', objectFit: 'cover', borderTopLeftRadius: '10px', borderTopRightRadius: '10px' }} />
                                 ) : (
-                                    <div className="bg-light d-flex flex-column align-items-center justify-content-center" style={{ height: '200px', borderTopLeftRadius: '20px', borderTopRightRadius: '20px' }}>
+                                    <div className="bg-light d-flex flex-column align-items-center justify-content-center" style={{ height: '200px', borderTopLeftRadius: '10px', borderTopRightRadius: '10px' }}>
                                         <span style={{ fontSize: '3rem' }}>{isExternal ? '📍' : '📷'}</span>
                                     </div>
                                 )}
@@ -119,76 +146,52 @@ export const SpotDetailModal = ({ spotId, onClose }) => {
                             </div>
 
                             <div className="modal-body p-4">
-                                {/* CATEGORÍA Y TÍTULOS */}
                                 <div className="mb-3">
-                                    <select 
-                                        className="form-select form-select-sm border-0 bg-success bg-opacity-10 text-success fw-bold w-auto mb-2" 
-                                        value={category} 
-                                        onChange={e => setCategory(e.target.value)}
-                                    >
+                                    <select className="form-select form-select-sm border-0 bg-success bg-opacity-10 text-success fw-bold w-auto mb-2" value={category} onChange={e => setCategory(e.target.value)}>
                                         <option value="areas y campings">🏕️ Áreas y Campings</option>
                                         <option value="parkings">🅿️ Parkings</option>
                                         <option value="vaciado y agua">💧 Vaciado y Agua</option>
                                         <option value="gasolineras">⛽ Gasolineras</option>
                                         <option value="supermercados">🛒 Supermercados</option>
                                     </select>
-                                    <input className="form-control fw-bold h4 border-0 p-0 shadow-none mb-1" value={name} onChange={e => setName(e.target.value)} />
+                                    <input className="form-control fw-bold h4 border-0 p-0 shadow-none mb-1 bg-transparent" value={name} readOnly={true} />
                                     <p className="text-muted small mb-3">📍 {address}</p>
                                 </div>
 
                                 <hr />
 
-                                {/* SERVICIOS (ESTILO ICONOS QUE TE GUSTABA) */}
                                 <h6 className="fw-bold small text-muted text-uppercase mb-2">Servicios</h6>
                                 <div className="row g-2 text-center mb-4">
                                     <div className="col-3">
-                                        <div 
-                                            onClick={() => setHasWater(!hasWater)}
-                                            className={`p-2 rounded small cursor-pointer ${hasWater ? 'bg-success bg-opacity-10 text-success fw-bold border border-success' : 'bg-light text-muted border'}`}
-                                            style={{ cursor: 'pointer' }}
-                                        >💧 Agua</div>
+                                        <div onClick={() => setHasWater(!hasWater)} className={`p-2 rounded small ${hasWater ? 'bg-success bg-opacity-10 text-success fw-bold border border-success' : 'bg-light text-muted border'}`} style={{ cursor: 'pointer' }}>💧 Agua</div>
                                     </div>
                                     <div className="col-3">
-                                        <div 
-                                            onClick={() => setHasWaste(!hasWaste)}
-                                            className={`p-2 rounded small cursor-pointer ${hasWaste ? 'bg-success bg-opacity-10 text-success fw-bold border border-success' : 'bg-light text-muted'}`}
-                                            style={{ cursor: 'pointer' }}
-                                        >🗑️ Vaciado</div>
+                                        <div onClick={() => setHasWaste(!hasWaste)} className={`p-2 rounded small ${hasWaste ? 'bg-success bg-opacity-10 text-success fw-bold border border-success' : 'bg-light text-muted border'}`} style={{ cursor: 'pointer' }}>🗑️ Vaciado</div>
                                     </div>
                                     <div className="col-3">
-                                        <div 
-                                            onClick={() => setHasLight(!hasLight)}
-                                            className={`p-2 rounded small cursor-pointer ${hasLight ? 'bg-success bg-opacity-10 text-success fw-bold border border-success' : 'bg-light text-muted'}`}
-                                            style={{ cursor: 'pointer' }}
-                                        >⚡ Luz</div>
+                                        <div onClick={() => setHasLight(!hasLight)} className={`p-2 rounded small ${hasLight ? 'bg-success bg-opacity-10 text-success fw-bold border border-success' : 'bg-light text-muted border'}`} style={{ cursor: 'pointer' }}>⚡ Luz</div>
                                     </div>
                                     <div className="col-3">
-                                        <div 
-                                            onClick={() => setIsSleepable(!isSleepable)}
-                                            className={`p-2 rounded small cursor-pointer ${isSleepable ? 'bg-success bg-opacity-10 text-success fw-bold border border-success' : 'bg-light text-muted'}`}
-                                            style={{ cursor: 'pointer' }}
-                                        >🚐 Pernocta</div>
+                                        <div onClick={() => setIsSleepable(!isSleepable)} className={`p-2 rounded small ${isSleepable ? 'bg-success bg-opacity-10 text-success fw-bold border border-success' : 'bg-light text-muted border'}`} style={{ cursor: 'pointer' }}>🚐 Pernocta</div>
                                     </div>
                                 </div>
 
                                 <h6 className="fw-bold small text-muted text-uppercase mb-2">Descripción</h6>
-                                <textarea className="form-control border-0 bg-light mb-4" rows="1" style={{ resize: 'none', overflow: 'hidden' }} value={description} onChange={e => { setDescription(e.target.value); autoGrow(e); }} placeholder="Información útil..." />
+                                <textarea className="form-control border-0 bg-light mb-4" rows="1" style={{ resize: 'none', overflow: 'hidden' }} value={description} onChange={e => { setDescription(e.target.value); autoGrow(e); }} placeholder="¿Hay sombra? ¿Es tranquilo?..." />
 
-                                {/* VALORACIÓN Y COMENTARIO */}
                                 <div className="bg-light p-3 rounded border mb-4 shadow-sm">
                                     <h6 className="fw-bold small mb-3 text-uppercase">Tu Opinión</h6>
                                     <div className="d-flex gap-2">
                                         <select className="form-select form-select-sm w-25 border-0 shadow-sm" value={newRating} onChange={e => setNewRating(parseInt(e.target.value))}>
-                                            {[5,4,3,2,1].map(n => <option key={n} value={n}>{n} ★</option>)}
+                                            {[5, 4, 3, 2, 1].map(n => <option key={n} value={n}>{n} ★</option>)}
                                         </select>
-                                        <textarea className="form-control form-control-sm border-0 shadow-sm" rows="1" style={{ resize: 'none', overflow: 'hidden' }} value={newComment} onChange={e => { setNewComment(e.target.value); autoGrow(e); }} placeholder="¿Qué tal el sitio?..." />
+                                        <textarea className="form-control form-control-sm border-0 shadow-sm" rows="1" style={{ resize: 'none', overflow: 'hidden' }} value={newComment} onChange={e => { setNewComment(e.target.value); autoGrow(e); }} placeholder="Escribe tu reseña..." />
                                     </div>
                                 </div>
 
-                                {/* LISTA DE COMENTARIOS (Solo si existen) */}
                                 {!isExternal && comments.length > 0 && (
                                     <div className="mb-4">
-                                        <h6 className="fw-bold small text-muted text-uppercase mb-3">Reseñas</h6>
+                                        <h6 className="fw-bold small text-muted text-uppercase mb-3">Reseñas de la comunidad</h6>
                                         <div className="pe-2" style={{ maxHeight: '150px', overflowY: 'auto' }}>
                                             {comments.map(c => (
                                                 <div key={c.coment_id} className="small bg-white p-2 rounded mb-2 border shadow-sm border-start border-success border-3">
@@ -199,12 +202,25 @@ export const SpotDetailModal = ({ spotId, onClose }) => {
                                     </div>
                                 )}
 
-                                <label className="fw-bold small text-muted text-uppercase mb-1" style={{ fontSize: '0.7rem' }}>URL Imagen</label>
-                                <input className="form-control form-control-sm border-0 bg-light mb-4" value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="https://..." />
+                                <label className="fw-bold small text-muted text-uppercase mb-1" style={{ fontSize: '0.7rem' }}>URL de la foto del lugar</label>
+                                <input className="form-control form-control-sm border-0 bg-light mb-4" value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="Pega el link de la imagen aquí..." />
 
-                                <button className="btn btn-success w-100 fw-bold py-2 shadow-sm" onClick={handleAction}>
-                                    {isExternal ? "➕ GUARDAR EN LA COMUNIDAD" : "💾 ACTUALIZAR DATOS / COMENTAR"}
-                                </button>
+                                {/* MENSAJE DE ERROR VISUAL */}
+                                {errorMessage && (
+                                    <div className="alert alert-danger py-2 small fw-bold text-center border-0 mb-3" style={{ fontSize: '0.85rem' }}>
+                                        {errorMessage}
+                                    </div>
+                                )}
+
+                                {isExternal && !isAlreadySaved ? (
+                                    <button className="btn btn-success w-100 fw-bold py-2 shadow-sm" onClick={handleAction}>
+                                        ➕ CONFIRMAR Y GUARDAR SITIO
+                                    </button>
+                                ) : (
+                                    <button className="btn btn-outline-success w-100 fw-bold py-2 shadow-sm" onClick={handleAction}>
+                                        {isExternal ? "✅ YA ESTÁ EN LA COMUNIDAD (AÑADIR RESEÑA)" : "ENVIAR RESEÑA / ACTUALIZAR"}
+                                    </button>
+                                )}
                             </div>
                         </>
                     )}

@@ -36,9 +36,10 @@ def get_spot_by_id(spot_id):
 
 
 @spot.route("/spots", methods=["POST"])
-@jwt_required()
+# @jwt_required()
 def create_spot():
-    user_id = get_jwt_identity()
+  # user_id = get_jwt_identity()
+    user_id = 2
     data = request.get_json()
 
     if not data:
@@ -62,10 +63,32 @@ def create_spot():
         rating=data.get("rating"),
         is_sleepable=data.get("is_sleepable", True),
         has_water=data.get("has_water", False),
-        has_waste_dump=data.get("has_waste_dump", False)
+        has_waste_dump=data.get("has_waste_dump", False),
+        has_electricity=data.get("has_electricity", False)
     )
 
     db.session.add(new_spot)
+    db.session.flush()
+    
+    coment_text = data.get("coment_text")
+    if coment_text:
+        new_coment = Coment(
+            user_id=user_id,
+            spot_id=new_spot.spot_id,
+            coment_text=coment_text,
+            rating=data.get("rating", 5)
+        )
+        db.session.add(new_coment)
+    
+    image_url = data.get("image_url")
+    if image_url:
+        new_media = Media_spot(
+            post_id=new_spot.spot_id,
+            url=image_url,
+            media_type="image"
+        )
+        db.session.add(new_media)
+
     db.session.commit()
     return jsonify(new_spot.serialize()), 201
 

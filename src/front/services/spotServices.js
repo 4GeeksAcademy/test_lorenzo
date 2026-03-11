@@ -41,21 +41,21 @@ export const getSpotById = async (id) => {
 
 // # Para crear un nuevo punto en la base de datos
 export const createSpot = async (spotData) => {
-    const token = localStorage.getItem("token"); 
+    //const token = localStorage.getItem("token"); 
 
-    // SEGURIDAD: Si no hay token, avisamos antes de romper el backend
-    if (!token) {
+    /*if (!token) {
         console.error("No hay token en localStorage. Debes iniciar sesión.");
         alert("Tu sesión ha expirado. Por favor, inicia sesión de nuevo.");
         return null;
     }
+*/
 
     try {
         const response = await fetch(`${API_URL}/spot/spots`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}` 
+                //"Authorization": `Bearer ${token}` -- LA COMENTO HASTA QUE ESTE LO DEL TOKEN
             },
             body: JSON.stringify(spotData)
         });
