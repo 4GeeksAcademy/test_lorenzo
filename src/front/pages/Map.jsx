@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import mapboxgl from 'mapbox-gl';
+import { SearchBox } from '@mapbox/search-js-react';
 import { SearchBoxCore } from '@mapbox/search-js-core';
 import { Sidebar } from '../components/Map-components/Sidebar';
 import { Marker } from '../components/Map-components/Marker';
@@ -25,24 +26,27 @@ export const Map = () => {
   const [stores, setStores] = useState([]);
   const [selectedStore, setSelectedStore] = useState(null);
   const [infoModalSpotId, setInfoModalSpotId] = useState(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); 
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const [filters, setFilters] = useState({
     water: false,
     sleep: false,
     waste: false,
     electricity: false,
-    community: false 
+    community: false
   });
 
+  // 1. Cargar spots
+  const loadSpots = async () => {
+    const data = await getAllSpots();
+    if (data) setStores(data);
+  };
+
   useEffect(() => {
-    const loadSpots = async () => {
-      const data = await getAllSpots();
-      if (data) setStores(data);
-    };
     loadSpots();
   }, []);
 
+  // 2. Filtrado (ORIGINAL)
   const filteredStores = useMemo(() => {
     return (stores || []).filter(store => {
       const matchWater = !filters.water || store.has_water === true;
@@ -60,6 +64,35 @@ export const Map = () => {
     });
   }, [stores, filters, searchCategory]);
 
+  // 3. Unificar lista para Sidebar (ESTRUCTURA ORIGINAL)
+  const unifiedListForSidebar = useMemo(() => {
+    if (!mapBounds) return [];
+    const [[swLng, swLat], [neLng, neLat]] = mapBounds;
+
+    const visibleDbSpots = filteredStores.filter(s => {
+      return s.longitude >= swLng && s.longitude <= neLng && s.latitude >= swLat && s.latitude <= neLat;
+    }).map(s => ({ ...s, id: `db-${s.spot_id}`, isCustom: true }));
+
+    const mapboxSpots = filters.community ? [] : searchResults.map((f, index) => ({
+      id: f.id || `ext-${index}`,
+      name: f.properties.name,
+      address: f.properties.full_address || f.properties.address,
+      isCustom: false,
+      longitude: f.geometry.coordinates[0],
+      latitude: f.geometry.coordinates[1],
+      category: searchCategory
+    }));
+
+    return [...visibleDbSpots, ...mapboxSpots].sort((a, b) => (b.rating || 0) - (a.rating || 0));
+  }, [filteredStores, searchResults, mapBounds, filters.community, searchCategory]);
+
+  // 4. Buscar objeto completo (ORIGINAL)
+  const selectedSpotData = useMemo(() => {
+    if (!infoModalSpotId) return null;
+    return unifiedListForSidebar.find(s => s.id === infoModalSpotId);
+  }, [infoModalSpotId, unifiedListForSidebar]);
+
+  // Inicialización del Mapa
   useEffect(() => {
     if (mapRef.current) return;
     const timer = setTimeout(() => {
@@ -70,13 +103,16 @@ export const Map = () => {
         center: [-3.70379, 40.41678],
         zoom: 13
       });
+
       mapRef.current.on('load', () => {
         setMapBounds(mapRef.current.getBounds().toArray());
         setIsMapReady(true);
       });
+
       mapRef.current.on('moveend', () => {
         setMapBounds(mapRef.current.getBounds().toArray());
       });
+
       searchRef.current = new SearchBoxCore({ accessToken: MAPBOX_ACCESS_TOKEN, language: 'es' });
     }, 100);
     return () => {
@@ -85,6 +121,7 @@ export const Map = () => {
     };
   }, []);
 
+  // Efecto FlyTo Sidebar
   useEffect(() => {
     if (selectedStore && mapRef.current) {
       const longitude = selectedStore.longitude || selectedStore.geometry?.coordinates[0];
@@ -122,28 +159,6 @@ export const Map = () => {
     }
   }, [mapBounds, searchCategory, searchBounds]);
 
-  const unifiedListForSidebar = useMemo(() => {
-    if (!mapBounds) return [];
-    const [[swLng, swLat], [neLng, neLat]] = mapBounds;
-    
-    const visibleDbSpots = filteredStores.filter(s => {
-      return s.longitude >= swLng && s.longitude <= neLng && s.latitude >= swLat && s.latitude <= neLat;
-    }).map(s => ({ ...s, id: `db-${s.spot_id}`, isCustom: true }));
-
-    // # CORRECCIÓN DE KEYS: Usamos f.id o un ID generado para evitar 'ext-undefined'
-    const mapboxSpots = filters.community ? [] : searchResults.map((f, index) => ({
-      id: f.id || `ext-${index}`, 
-      name: f.properties.name,
-      address: f.properties.full_address || f.properties.address,
-      isCustom: false,
-      longitude: f.geometry.coordinates[0],
-      latitude: f.geometry.coordinates[1],
-      category: searchCategory
-    }));
-
-    return [...visibleDbSpots, ...mapboxSpots].sort((a, b) => (b.rating || 0) - (a.rating || 0));
-  }, [filteredStores, searchResults, mapBounds, filters.community, searchCategory]);
-
   const categoryButtons = [
     { label: "🏕️ Áreas y Campings", value: "campground" },
     { label: "🅿️ Parking", value: "parking" },
@@ -154,19 +169,21 @@ export const Map = () => {
 
   return (
     <div className="map-main-container">
+      
       <div className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
         <Sidebar
           key={`sidebar-${unifiedListForSidebar.length}`}
           stores={unifiedListForSidebar}
           setSelectedStore={(store) => {
             setSelectedStore(store);
-            setIsSidebarOpen(false); 
+            setIsSidebarOpen(false);
           }}
           onOpenDetail={setInfoModalSpotId}
         />
       </div>
 
-      <div className="map-wrapper" onClick={() => { if(isSidebarOpen) setIsSidebarOpen(false) }}>
+      <div className="map-wrapper" onClick={() => { if (isSidebarOpen) setIsSidebarOpen(false) }}>
+        
         <div className="button-container">
           <button
             onClick={(e) => { e.stopPropagation(); setFilters(prev => ({ ...prev, community: !prev.community })); }}
@@ -175,9 +192,7 @@ export const Map = () => {
           >
             👥 Comunidad
           </button>
-          
           <div className="separator"></div>
-
           {categoryButtons.map(({ label, value }) => (
             <button
               key={value}
@@ -189,9 +204,28 @@ export const Map = () => {
           ))}
         </div>
 
+        {/* BUSCADOR CENTRADO */}
+        <div className="search-center-container">
+          <div className="search-box-wrapper">
+            <SearchBox
+              accessToken={MAPBOX_ACCESS_TOKEN}
+              map={mapRef.current}
+              mapboxgl={mapboxgl}
+              placeholder="Busca una ciudad o dirección..."
+              language="es"
+              onRetrieve={(result) => {
+                if (result && result.features.length > 0) {
+                  const [longitude, latitude] = result.features[0].geometry.coordinates;
+                  mapRef.current.flyTo({ center: [longitude, latitude], zoom: 14, essential: true });
+                }
+              }}
+            />
+          </div>
+        </div>
+
         {showSearchAreaButton && (
           <button onClick={(e) => { e.stopPropagation(); performCategorySearch(); }} className="search-area-button">
-            Buscar en esta área
+            🔎 BUSCAR EN ESTA ZONA
           </button>
         )}
 
@@ -201,17 +235,20 @@ export const Map = () => {
 
         <div ref={mapContainerRef} id="map-container" />
 
+        {/* Marcadores DB */}
         {isMapReady && filteredStores.map((store) => (
-          <Marker 
-            key={`db-${store.spot_id}`} 
-            map={mapRef.current} 
-            store={store} 
-            onOpenDetail={setInfoModalSpotId} 
+          <Marker
+            key={`db-${store.spot_id}`}
+            map={mapRef.current}
+            store={store}
+            onOpenDetail={setInfoModalSpotId}
           />
         ))}
 
-        {isMapReady && !filters.community && searchResults.map((feature, index) => {
-            // Generamos una key única robusta
+        {/* Marcadores Mapbox */}
+        {isMapReady && !filters.community && searchResults
+          .filter(mapboxItem => !stores.some(dbSpot => dbSpot.name === mapboxItem.properties.name))
+          .map((feature, index) => {
             const featureId = feature.id || `ext-${index}`;
             return (
               <Marker
@@ -220,6 +257,7 @@ export const Map = () => {
                 onOpenDetail={setInfoModalSpotId}
                 store={{
                   spot_id: featureId,
+                  id: featureId,
                   name: feature.properties.name,
                   address: feature.properties.full_address || feature.properties.address,
                   longitude: feature.geometry.coordinates[0],
@@ -229,10 +267,16 @@ export const Map = () => {
                 }}
               />
             );
-        })}
+          })}
 
         {infoModalSpotId && (
-          <SpotDetailModal spotId={infoModalSpotId} onClose={() => setInfoModalSpotId(null)} />
+          <SpotDetailModal
+            spotId={infoModalSpotId}
+            externalData={selectedSpotData}
+            onClose={() => setInfoModalSpotId(null)}
+            onSuccess={loadSpots}
+            allSpots={stores}
+          />
         )}
       </div>
     </div>
