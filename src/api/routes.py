@@ -316,4 +316,4 @@ def create_vehicle():
     db.session.commit()
 
     return jsonify({
-        "msg": "vehicle craeted successfully"}),201
+        "msg": "vehicle craeted successfully"}),201,
