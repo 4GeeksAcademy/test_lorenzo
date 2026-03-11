@@ -2,9 +2,13 @@ export const initialStore=()=>{
   return{
     message: null,
     vans: [],
-    spot:[],
     booking: [],
+    token: localStorage.getItem("token") || null,
+    user: null,
+    spot:[],
     fav_vans:[],
+    authReady: false
+    
   }
 }
 
@@ -21,20 +25,19 @@ export default function storeReducer(store, action = {}) {
           ...store,
           vans: action.payload
         }
-
-    case "fav_vans":
+      
+      case "fav_vans":
         return{
           ...store,
           fav_vans: action.payload
-
         }
-    
-    case "set_spot":
+      
+      case "set_spot":
       return{
         ...store,
         spot: action.payload
       }
-      
+
     case "set_booking":
       return{
           ...store,
@@ -47,7 +50,23 @@ export default function storeReducer(store, action = {}) {
         booking: [...store.booking, action.payload]
       }
 
-    default:
+    case "auth_login":{
+      const{token}= action.payload;
+      localStorage.setItem("token",token);
+      return{...store,token};
+    }
+      
+    case"auth_set_user":
+    return{...store, user:action.payload};
+      
+    case"auth_logout":
+    localStorage.removeItem("token");
+      
+    return{...store, token:null, user:null, authReady:true};
+      
+   default:
+
       throw Error('Unknown action.');
   }    
 }
+

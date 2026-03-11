@@ -11,7 +11,7 @@ export const VanCard = ({ van }) => {
 
   return (
     <>
-      <Link to={`/vans/${van.car_id}`}>
+      <Link to={`/vans/${van.car_id}`} className="text-decoration-none">
         <div className="container">
           <div className="card mb-3" >
             <div className="row g-0">
