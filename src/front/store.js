@@ -4,7 +4,7 @@ export const initialStore=()=>{
     vans: [],
     booking: [],
     token: localStorage.getItem("token") || null,
-    user: null,
+    user: [],
     spot:[],
     fav_vans:[],
     authReady: false
