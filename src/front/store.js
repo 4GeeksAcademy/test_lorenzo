@@ -8,7 +8,7 @@ export const initialStore=()=>{
     spot:[],
     fav_vans:[],
     authReady: false
-
+    
   }
 }
 
@@ -25,20 +25,19 @@ export default function storeReducer(store, action = {}) {
           ...store,
           vans: action.payload
         }
-
-    case "fav_vans":
+      
+      case "fav_vans":
         return{
           ...store,
           fav_vans: action.payload
-
         }
-    
-    case "set_spot":
+      
+      case "set_spot":
       return{
         ...store,
         spot: action.payload
       }
-      
+
     case "set_booking":
       return{
           ...store,
@@ -66,6 +65,7 @@ export default function storeReducer(store, action = {}) {
     return{...store, token:null, user:null, authReady:true};
       
    default:
+
       throw Error('Unknown action.');
   }    
 }
