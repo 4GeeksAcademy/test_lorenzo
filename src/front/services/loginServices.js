@@ -33,11 +33,12 @@ export const editProfile = async(user)=>{
   const data = await response.json();
   return data;
 };
-const token = localStorage.getItem("token");
-export const veryfytoken = async (dispatch)=> {
-  
+
+export const veryfytoken = async ( dispatch)=> {
+  const token = localStorage.getItem("token");
+
   if(!token){
-    dispatch({type:"auth_set_user", payload:null});
+    if (dispatch) dispatch({ type: "auth_set_user", payload: null });
     return;
   }
   const response = await fetch(
@@ -49,10 +50,10 @@ export const veryfytoken = async (dispatch)=> {
   },
 );
 if(!response.ok){
-  dispatch({type:"auth_logout"});
+  if (dispatch) dispatch({ type: "auth_logout" });
     return;
   }
   const user = await response.json();
-  dispatch({type:"auth_set_user", payload: user});
+  if (dispatch) dispatch({ type: "auth_set_user", payload: user });
 
 };
