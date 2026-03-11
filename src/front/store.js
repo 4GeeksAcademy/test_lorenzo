@@ -65,7 +65,7 @@ export default function storeReducer(store, action = {}) {
       
     return{...store, token:null, user:null, authReady:true};
       
-    default:
+   default:
       throw Error('Unknown action.');
   }    
 }
