@@ -217,13 +217,13 @@ export const DetailsVan = () => {
                                         </div>
                                     </div>
                                 </div>
-                                <button
+                                {/* <button
                                     className={`btn w-100 border-2 ${store.fav_vans.some(item => item.id === van.id) ? 'btn-danger' : 'btn-outline-danger'}`}
                                     onClick={handleFavVan}
                                 >
                                     <i className={`${store.fav_vans.some(item => item.id === van.id) ? 'fa-solid' : 'fa-regular'} fa-heart me-2`}></i>
                                     {store.fav_vans.some(item => item.id === van.id) ? 'En favoritos' : 'Añadir a favoritos'}
-                                </button>
+                                </button> */}
                             </div>
                         </div>
                     </div>
