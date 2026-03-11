@@ -80,6 +80,7 @@ def edit_profile():
     data = request.get_json()
     new_password = data.get("password")
     new_name = data.get("name")
+    new_user_name = data.get("user_name")
     new_last_name = data.get("last_name")
     new_phone = data.get("phone")
     new_address = data.get("address")
@@ -88,6 +89,8 @@ def edit_profile():
         user.set_password(new_password)
     if new_name:
         user.name = new_name
+    if new_user_name:                      
+        user.user_name = new_user_name
     if new_last_name:
         user.last_name = new_last_name
     if new_phone:
@@ -96,4 +99,4 @@ def edit_profile():
         user.address = new_address
 
     db.session.commit()
-    return jsonify({'msg': 'Save change successfully'}), 201
+    return jsonify(user.serialize()), 200
