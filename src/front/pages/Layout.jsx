@@ -10,8 +10,8 @@ import { veryfytoken } from "../services/loginServices"
 export const Layout = () => {
     const {store, dispatch} =useGlobalReducer()
     useEffect (()=> {
-        veryfytoken(store.token, dispatch)
-    },[store.token])
+        veryfytoken(dispatch)
+    },[])
     return (
         <ScrollToTop>
             <Navbar />
