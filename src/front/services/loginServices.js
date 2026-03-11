@@ -34,7 +34,8 @@ export const editProfile = async(user)=>{
   return data;
 };
 const token = localStorage.getItem("token");
-export const veryfytoken = async ( dispatch)=> {
+export const veryfytoken = async (dispatch)=> {
+  
   if(!token){
     dispatch({type:"auth_set_user", payload:null});
     return;
