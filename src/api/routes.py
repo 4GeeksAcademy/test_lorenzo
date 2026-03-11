@@ -83,25 +83,32 @@ def edit_profile():
     user = db.session.get(User, int(user_id))
 
     data = request.get_json()
+    new_user_name=data.get("user_name")
     new_password = data.get("password")
     new_name = data.get("name")
     new_last_name = data.get("last_name")
     new_phone = data.get("phone")
-    new_address = data.get("address")
+    new_address = data.get("address")  
+
+    if new_user_name and new_user_name != user.user_name:
+        existing = db.session.execute(select(User).where(User.user_name == new_user_name)).scalar_one_or_none()
+        if existing:
+            return jsonify({"error": "El nombre de usuario ya está en uso"}), 400
+        user.user_name = new_user_name
 
     if new_password:
         user.set_password(new_password)
-    if new_name:
+    if new_name is not None:
         user.name = new_name
-    if new_last_name:
+    if new_last_name is not None:
         user.last_name = new_last_name
-    if new_phone:
+    if new_phone is not None:
         user.phone = new_phone
-    if new_address:
+    if new_address is not None:
         user.address = new_address
 
     db.session.commit()
-    return jsonify({'msg': 'Save change successfully'}), 201
+    return jsonify(user.serialize()), 200
 
 # -------------------RUTAS MODELO SPOT---------------------
 
@@ -126,7 +133,7 @@ def get_spot_by_id(spot_id):
     else:
         data["userName"] = "Usuario desconocido"
 
-    media_list = Media_Spot.query.filter_by(post_id=spot_id).all()
+    media_list = Media_spot.query.filter_by(post_id=spot_id).all()
     data["media"] = [item.serialize() for item in media_list]
     return jsonify(data), 200
 
@@ -309,4 +316,4 @@ def create_vehicle():
     db.session.commit()
 
     return jsonify({
-        "msg": "vehicle craeted successfully"}),201
+        "msg": "vehicle craeted successfully"}),201,
