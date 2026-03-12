@@ -1,3 +1,4 @@
+
 :root {
   --color-sg-green: #00473C;
   --color-sg-light-green: #f4f3e7;
@@ -45,9 +46,10 @@
   padding: 10px;
   position: absolute;
   top: 0;
-  width: 100%;
+  width: auto;
   z-index: 100;
-  scrollbar-width: none; /* Oculta barra en Firefox */
+  scrollbar-width: none; 
+  max-width: calc(100% - 100px);
 }
 
 .button-container::-webkit-scrollbar {
@@ -190,5 +192,10 @@ mapbox-search-box:focus-within {
 
 .search-area-button:hover {
   transform: translateX(-50%) scale(1.05);
-  background-color: #00332b; /* Un verde un poco más oscuro al pasar el mouse */
+  background-color: #00332b; 
+}
+
+.mapboxgl-ctrl-top-right {
+  z-index: 1001 !important; 
+  top: 10px; 
 }

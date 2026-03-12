@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, url_for, Blueprint
-from api.models import db, User, Post_spot, Media_spot
+from api.models import db, User, Post_spot, Media_spot, Coment 
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
 from sqlalchemy import select
@@ -36,10 +36,9 @@ def get_spot_by_id(spot_id):
 
 
 @spot.route("/spots", methods=["POST"])
-# @jwt_required()
+@jwt_required()
 def create_spot():
-  # user_id = get_jwt_identity()
-    user_id = 2
+    user_id = get_jwt_identity()
     data = request.get_json()
 
     if not data:

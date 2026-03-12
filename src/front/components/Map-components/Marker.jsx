@@ -35,7 +35,7 @@ export const Marker = ({ map, store, onOpenDetail }) => {
         return () => markerRef.current?.remove();
     }, [map, store]);
 
-    // # Lógica de Emojis según categoría
+    // # Emojis para categoría
     let emoji = "📍";
     if (store.category === "campground") emoji = "🏕️";
     if (store.category === "parking") emoji = "🅿️";
@@ -57,7 +57,7 @@ export const Marker = ({ map, store, onOpenDetail }) => {
 
     return (
         <>
-            {/* PORTAL 1: Contenido del Popup */}
+            {/*  Contenido del Popup */}
             {createPortal(
                 <div style={{ padding: '10px', minWidth: '160px', color: '#333' }}>
                     <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{store.name}</div>
@@ -76,7 +76,7 @@ export const Marker = ({ map, store, onOpenDetail }) => {
                 popupElement.current
             )}
 
-            {/* PORTAL 2: Icono en el mapa */}
+            {/*  Icono en el mapa */}
             {createPortal(
                 <div style={{ position: 'relative', cursor: 'pointer' }}>
                     <MarkerIcon />

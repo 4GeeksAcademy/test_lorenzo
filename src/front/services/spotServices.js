@@ -4,7 +4,7 @@ const API_URL = import.meta.env.VITE_BACKEND_URL;
 // # para obtener la lista completa de puntos (Spots)
 export const getAllSpots = async () => {
     try {
-        const response = await fetch(`${API_URL}/spot/spots`); 
+        const response = await fetch(`${API_URL}/spot/spots`);
         if (!response.ok) return [];
         return await response.json();
     } catch (error) {
@@ -13,18 +13,18 @@ export const getAllSpots = async () => {
     }
 };
 
-export const SpotData = async (dispatch) =>{
+export const SpotData = async (dispatch) => {
     const data = await getAllSpots()
 
     if (data && Array.isArray(data)) {
-            dispatch({
-                type: "set_spot",
-                payload: data
-            });
-            console.log("Spots cargados en el store");
-        } else {
-            console.log("No se recibieron spots");
-        }
+        dispatch({
+            type: "set_spot",
+            payload: data
+        });
+        console.log("Spots cargados en el store");
+    } else {
+        console.log("No se recibieron spots");
+    }
 };
 
 // # para obtener el detalle de un solo punto por su ID
@@ -35,27 +35,26 @@ export const getSpotById = async (id) => {
         return await response.json();
     } catch (error) {
         console.error("Error cargando el detalle:", error);
-        return null; 
+        return null;
     }
 };
 
 // # Para crear un nuevo punto en la base de datos
 export const createSpot = async (spotData) => {
-    //const token = localStorage.getItem("token"); 
+    const token = localStorage.getItem("token");
 
-    /*if (!token) {
+    if (!token) {
         console.error("No hay token en localStorage. Debes iniciar sesión.");
         alert("Tu sesión ha expirado. Por favor, inicia sesión de nuevo.");
         return null;
     }
-*/
 
     try {
         const response = await fetch(`${API_URL}/spot/spots`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                //"Authorization": `Bearer ${token}` -- LA COMENTO HASTA QUE ESTE LO DEL TOKEN
+                "Authorization": `Bearer ${token}`
             },
             body: JSON.stringify(spotData)
         });
@@ -63,7 +62,7 @@ export const createSpot = async (spotData) => {
         if (response.ok) {
             return await response.json();
         }
-        
+
         const errorDetail = await response.json();
         return null;
     } catch (error) {
@@ -118,7 +117,7 @@ export const createComment = async (spotId, text, rating) => {
             },
             body: JSON.stringify({
                 spot_id: spotId,
-                coment: text,  
+                coment: text,
                 rating: rating
             })
         });

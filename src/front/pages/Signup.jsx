@@ -47,8 +47,10 @@ export const Signup = () => {
         const response = await signUp(user)
         if (response.error) {
             setError(response.error)
+
             return;
         }
+        
         navigate("/")
 
     }
