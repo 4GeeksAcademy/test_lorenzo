@@ -17,28 +17,26 @@ export const UserPage = () => {
 
     return (
         <>
-            {/* <div className="d-flex overflow-scroll pb-2" style={{ gap: "3rem" }}>                {store.spot && store.spot.map((spot) => {
-                return (
-                    <SpotCard spot={spot} key={spot.id || spot.spot_id} />
-                )
-            })}
-            </div> */}
-            
             <div className="container">
-
                 <h2 className="mb-3">Campings</h2>
                 <div className="d-flex flex-row flex-nowrap overflow-x-auto pb-4 gap-3 mb-5">
-                    {campings.map(spot => <SpotCard spot={spot} key={spot.id} />)}
+                    {campings.map((spot, index) => (
+                        <SpotCard spot={spot} key={`camp-${spot.id || index}`} />
+                    ))}
                 </div>
 
                 <h2 className="mb-3">Parking</h2>
                 <div className="d-flex flex-row flex-nowrap overflow-x-auto pb-4 gap-3 mb-5">
-                    {parking.map(spot => <SpotCard spot={spot} key={spot.id} />)}
+                    {parking.map((spot, index) => (
+                        <SpotCard spot={spot} key={`park-${spot.id || index}`} />
+                    ))}
                 </div>
 
                 <h2 className="mb-3">Vaciado de Aguas</h2>
                 <div className="d-flex flex-row flex-nowrap overflow-x-auto pb-4 gap-3 mb-5">
-                    {aguasGrises.map(spot => <SpotCard spot={spot} key={spot.id} />)}
+                    {aguasGrises.map((spot, index) => (
+                        <SpotCard spot={spot} key={`water-${spot.id || index}`} />
+                    ))}
                 </div>
             </div>
         </>

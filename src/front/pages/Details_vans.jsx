@@ -6,15 +6,20 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { differenceInDays, format } from "date-fns";
 import { addBooking } from "../services/bookingServices";
+import { login } from "../services/loginServices";
 
 export const DetailsVan = () => {
 
     const { id } = useParams()
+    const { store, dispatch } = useGlobalReducer()
     const [van, setVan] = useState()
     const [startDate, setStartDate] = useState(null);
     const [endDate, setEndDate] = useState(null);
     const [loading, setLoading] = useState(true)
-    const { store, dispatch } = useGlobalReducer()
+    const [error, setError] = useState("");
+    const [user, setUser] = useState({ email: "", password: "" });
+    const [loginLoading, setLoginLoading] = useState(false)
+    const isLogin = !!store.user
 
     const days = endDate ? differenceInDays(endDate, startDate) : 0;
     const bookingTotal = days * parseFloat(van?.price_per_day)
@@ -36,13 +41,12 @@ export const DetailsVan = () => {
         setVan(vanData)
         setLoading(false)
         console.log(vanData);
-        
     }
 
     const handleBooking = async () => {
         const bookingData = {
             car_id: id,
-            user_id: 1,
+            user_id: store.user.id,
             start_date: format(startDate, "yyyy-MM-dd"),
             end_date: format(endDate, "yyyy-MM-dd"),
             total_price: bookingTotal,
@@ -57,20 +61,47 @@ export const DetailsVan = () => {
         }
     }
 
-    const handleChange = (dates) => {
+    const handleChangeDate = (dates) => {
         const [start, end] = dates;
         setStartDate(start);
         setEndDate(end);
     };
 
-    const handleFavVan = () => {
-        const isFav = store.fav_vans.find(fav => fav.id === van.id);
-        if (isFav) {
-            const updatedFavs = store.fav_vans.filter(fav => fav.id !== van.id);
-            dispatch({ type: 'fav_vans', payload: updatedFavs });
+    // const handleFavVan = () => {
+    //     const isFav = store.fav_vans.find(fav => fav.id === van.id);
+    //     if (isFav) {
+    //         const updatedFavs = store.fav_vans.filter(fav => fav.id !== van.id);
+    //         dispatch({ type: 'fav_vans', payload: updatedFavs });
+    //     } else {
+    //         dispatch({ type: 'fav_vans', payload: [...store.fav_vans, van] });
+    //     }
+    // };
+    const handleChangeForm = (e) => {
+        setUser({
+            ...user,
+            [e.target.name]: e.target.value
+        })
+    }
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError("");
+        setLoginLoading(true); 
+
+        const response = await login(user);
+        
+        if (response.token) {
+            localStorage.setItem("token", response.token);
+            dispatch({ type: "auth_login", payload: { token: response.token } });
+            dispatch({ type: "auth_set_user", payload: response.user });
+            
+            // Cierre sencillo haciendo clic en la X
+            const closeButton = document.querySelector("#modalLoginAviso .btn-close");
+            if (closeButton) closeButton.click();
         } else {
-            dispatch({ type: 'fav_vans', payload: [...store.fav_vans, van] });
+            setError("Credenciales incorrectas.");
         }
+        setLoginLoading(false);
     };
 
     useEffect(() => {
@@ -151,7 +182,7 @@ export const DetailsVan = () => {
                                     <div className="datepicker d-flex justify-content-center border rounded-3 p-2 bg-light">
                                         <DatePicker
                                             selected={startDate}
-                                            onChange={handleChange}
+                                            onChange={handleChangeDate}
                                             startDate={startDate}
                                             endDate={endDate}
                                             minDate={new Date()}
@@ -182,13 +213,14 @@ export const DetailsVan = () => {
 
                                 <button
                                     className="btn btn-primary btn-lg w-100 fw-bold py-3 mb-3 shadow"
-                                    disabled={!van.available || !endDate}
+                                    disabled={!van.available || (isLogin && !endDate)}
                                     data-bs-toggle="modal"
-                                    data-bs-target="#modalReserva"
+                                    data-bs-target={isLogin ? "#modalReserva" : "#modalLoginAviso"}
                                 >
                                     {van.available ? 'RESERVAR AHORA' : 'NO DISPONIBLE'}
                                 </button>
 
+                                {/* --------------MODAL CONFRIMACIÓN--------------- */}
                                 <div className="modal fade" id="modalReserva" tabIndex="-1" aria-hidden="true">
                                     <div className="modal-dialog modal-dialog-centered">
                                         <div className="modal-content">
@@ -213,6 +245,53 @@ export const DetailsVan = () => {
                                                 >
                                                     Confirmar y Pagar
                                                 </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                        {/* ----------------- MODAL INICIAR SECIÓN----------------- */}
+                                <div className="modal fade" id="modalLoginAviso" tabIndex="-1" aria-hidden="true">
+                                    <div className="modal-dialog modal-dialog-centered">
+                                        <div className="modal-content border-0 shadow">
+                                            <div className="modal-header border-0">
+                                                <button type="button" className="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div className="modal-body text-center px-4 pb-5">
+                                                <i className="fa-solid fa-circle-user fa-4x text-primary mb-3"></i>
+                                                <h4 className="fw-bold">¡Casi listo!</h4>
+                                                <p className="text-muted mb-4">Inicia sesión para finalizar tu reserva.</p>
+
+                                                <form onSubmit={handleSubmit} className="text-start">
+                                                    {error && <div className="alert alert-danger py-2 small">{error}</div>}
+                                                    <div className="mb-3">
+                                                        <label className="form-label small fw-bold">Email</label>
+                                                        <input
+                                                            type="email"
+                                                            className="form-control"
+                                                            name="email"
+                                                            value={user.email}
+                                                            onChange={handleChangeForm}
+                                                            required
+                                                            placeholder="tu@email.com"
+                                                        />
+                                                    </div>
+                                                    <div className="mb-4">
+                                                        <label className="form-label small fw-bold">Contraseña</label>
+                                                        <input
+                                                            type="password"
+                                                            className="form-control"
+                                                            name="password"
+                                                            value={user.password}
+                                                            onChange={handleChangeForm}
+                                                            required
+                                                            placeholder="********"
+                                                        />
+                                                    </div>
+                                                    <button type="submit" className="btn btn-primary w-100 fw-bold py-2" disabled={loading}>
+                                                        {loginLoading ? "Cargando..." : "Entrar y Reservar"}
+                                                    </button>
+                                                </form>
                                             </div>
                                         </div>
                                     </div>

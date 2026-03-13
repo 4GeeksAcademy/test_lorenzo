@@ -10,7 +10,6 @@ van = Blueprint('van', __name__)
 CORS(van)
 
 @van.route('/vehicles', methods=['POST'])
-# @jwt_required()
 def create_vehicle():
     data = request.get_json()
     brand =data.get("brand")
@@ -42,14 +41,12 @@ def create_vehicle():
         "msg": "vehicle craeted successfully"}),201
 
 @van.route('/vehicles', methods=['GET'])
-# @jwt_required()
 def get_all_vehicles():
     vehicles = Vehicle.query.all()
     result =[vehicle.serialize() for vehicle in vehicles]
     return jsonify(result), 200
 
 @van.route('/vehicles/<int:car_id>', methods=['GET'])
-# @jwt_required()
 def get_vehicle(car_id):
     vehicle =Vehicle.query.get(car_id)
 
@@ -59,7 +56,6 @@ def get_vehicle(car_id):
 
 
 @van.route('/vehicle/<int:car_id>', methods=['PUT'])
-# @jwt_required()
 def update_vehicle(car_id):
     data = request.get_json()
     vehicle = Vehicle.query.get(car_id)
@@ -100,7 +96,6 @@ def delete_vehicle(car_id):
     return jsonify({"msg": "Vehicle deleterd succesfelly"}),  200
 
 @van.route("/vehicle/<int:car_id>/media", methods=["POST"])
-# @jwt_required()
 def add_media_to_van(car_id):
     data = request.get_json()
     url = data.get("url_vehicle")

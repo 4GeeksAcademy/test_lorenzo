@@ -1,60 +1,74 @@
-import React, { useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import rigoImageUrl from "../assets/img/rigo-baby.jpg";
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { WelcomeModal } from "../components/Welcomemodal.jsx";
+import { login } from "../services/loginServices.js";
 
 export const Home = () => {
 
-	// const { store, dispatch } = useGlobalReducer()
+	const { store, dispatch } = useGlobalReducer()
+	const navigate = useNavigate();
+	const [showPassword, setShowPassword] = useState(false);
+	const [error, setError] = useState("");
+	const [loading, setLoading] = useState(false);
+	const [showWelcomeModal, setShowWelcomeModal] = useState(false)
+	const [user, setUser] = useState({
+		email: "",
+		password: "",
+	})
 
-	// const loadMessage = async () => {
-	// 	try {
-	// 		const backendUrl = import.meta.env.VITE_BACKEND_URL
+	
+	const handleChange = (e) => {
+		setUser({
+			...user,
+			[e.target.name]: e.target.value
+		})
+	}
+	const handleSubmit = async (e) => {
+		e.preventDefault();
+		setError("");
 
-	// 		if (!backendUrl) throw new Error("VITE_BACKEND_URL is not defined in .env file")
+		if (!user.email.trim() || !user.password.trim()) {
+			setError("Por favor, completa todos los campos.");
+			return;
+		}
 
-	// 		const response = await fetch(backendUrl + "/api/hello")
-	// 		const data = await response.json()
+		setLoading(true);
 
-	// 		if (response.ok) dispatch({ type: "set_hello", payload: data.message })
+		const response = await login(user)
+		if (response.error) {
+			setError(response.error);
+			setLoading(false);
+			return;
+		}
 
-	// 		return data
+		localStorage.setItem("token", response.token);
+		dispatch({ type: "auth_login", payload: { token: response.token } });
 
-	// 	} catch (error) {
-	// 		if (error.message) throw new Error(
-	// 			`Could not fetch the message from the backend.
-	// 			Please check if the backend is running and the backend port is public.`
-	// 		);
-	// 	}
+		const hasUserName = response.user?.user_name
 
-	// }
 
-	// useEffect(() => {
-	// 	//loadMessage()
-	// }, [])
+		if (!hasUserName) {
+			setShowWelcomeModal(true);
+			setLoading(false);
+			return
+		}
+		dispatch({ type: "auth_set_user", payload: response.user });
+		navigate("/user")
+	}
 
-	// return (
-	// 	<div className="text-center mt-5">
-	// 		<h1 className="display-4">Hello Rigo!!</h1>
-	// 		<p className="lead">
-	// 			<img src={rigoImageUrl} className="img-fluid rounded-circle mb-3" alt="Rigo Baby" />
-	// 		</p>
-	// 		<div className="alert alert-info">
-	// 			{store.message ? (
-	// 				<span>{store.message}</span>
-	// 			) : (
-	// 				<span className="text-danger">
-	// 					Loading message from the backend (make sure your python 🐍 backend is running)...
-	// 				</span>
-	// 			)}
-	// 		</div>
-	// 	</div>
-	// );
+	useEffect(() => {
+		console.log(user)
+	}, [user])
 
 	return (
 		<>
 			<div className="bg-white min-vh-100">
 				<div className="container my-4">
+					{showWelcomeModal &&
+						<WelcomeModal show={showWelcomeModal} onClose={() => setShowWelcomeModal(false)} />
+					}
 					<div className="row mb-5 g-4">
 						<div className="col-lg-12">
 							<div className="position-relative rounded shadow-sm overflow-hidden"
@@ -66,14 +80,68 @@ export const Home = () => {
 								}}>
 								<div className="ms-auto m-3 col-12 col-md-4 col-lg-3">
 									<div className="bg-dark bg-opacity-25 mt-5 p-4 rounded shadow-lg">
-										<h3 className="text-center text-white mb-4 fw-bold">Login</h3>
-										<div className="mb-3">
-											<input type="text" className="form-control py-2 border-0 bg-light" placeholder="Usuario" />
-										</div>
-										<div className="mb-3">
-											<input type="password" className="form-control py-2 border-0 bg-light" placeholder="Contraseña" />
-										</div>
-										<button className="btn btn-dark w-100 rounded-pill fw-bold">Entrar</button>
+										<form onSubmit={handleSubmit}>
+											<div className="mb-3">
+												<label htmlFor="exampleInputEmail1" className="form-label text-white">Correo electronico</label>
+												<div className="input-group">
+													<span className="input-group-text">
+														<i className="fa-solid fa-envelope"></i>
+													</span>
+													<input type="email" className="form-control"
+														id="exampleInputEmail1"
+														aria-describedby="emailHelp"
+														name="email"
+														value={user.email}
+														onChange={handleChange}
+														required>
+													</input>
+													<small id="emailHelp" className="form-text text-white text-center fst-italic">
+														Nunca compartiremos tu correo electrónico con nadie más.
+													</small>
+												</div>
+											</div>
+											<div className="mb-3">
+												<label htmlFor="exampleInputPassword1" className="form-label text-white">Contraseña</label>
+												<div className="input-group">
+													<span className="input-group-text">
+														<i className="fa-solid fa-lock" />
+													</span>
+													<input type={showPassword ? "text" : "password"}
+														className="form-control"
+														placeholder="••••••••"
+														id="exampleInputPassword1"
+														name="password"
+														value={user.password}
+														onChange={handleChange}
+														required>
+													</input>
+													<button
+														type="button"
+														className="btn border text-secondary bg-white border"
+														onClick={() => setShowPassword((s) => !s)}>
+														<i className={`fa-solid ${showPassword ? "fa-eye-slash" : "fa-eye"}`} />
+													</button>
+												</div>
+											</div>
+											<button
+												type="submit"
+												className="btn btn-primary w-100"
+												disabled={loading}
+											>
+												{loading ? (
+													<span className="d-inline-flex align-items-center gap-2">
+														<span
+															className="spinner-border spinner-border-sm"
+															role="status"
+															aria-hidden="true"
+														></span>
+														Ingresando..
+													</span>
+												) : (
+													"Ingresar a tu cuenta"
+												)}
+											</button>
+										</form>
 										<div className="text-center  mt-3">
 											<small className="text-white">¿No tienes cuenta? <Link to="/signup" className="text-decoration-none"><span className="text-warning cursor-pointer">Regístrate</span></Link></small>
 										</div>
