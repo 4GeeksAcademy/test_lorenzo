@@ -142,10 +142,10 @@ class Post_spot(db.Model):
             "description": self.description,
             "address": self.address, 
             "city": self.city,
-            "phoneFormatted": self.phone_formatted,
+            "phone_formatted": self.phone_formatted,
             "longitude": float(self.longitude) if self.longitude is not None else 0.0,
             "latitude": float(self.latitude) if self.latitude is not None else 0.0,
-            "rating": float(self.rating) if self.rating is not None else None,
+            "rating": float(self.rating) if self.rating is not None else 0.0,
             "is_sleepable": self.is_sleepable,
             "has_water": self.has_water,
             "has_waste_dump": self.has_waste_dump,
@@ -209,7 +209,8 @@ class Coment (db.Model):
         "user_id": self.user_id,
         "spot_id": self.spot_id,
         "rating": self.rating,
-        "coment_text": self.coment_text
+        "coment_text": self.coment_text,
+        "user_name": self.user_coment.user_name if self.user_coment else "Usuario anónimo"
         }
     
 class Review_van(db.Model):

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { getSpotById, createSpot, getAllComments, createComment } from '../../services/spotServices';
 
-export const SpotDetailModal = ({ spotId, externalData, onClose, onSuccess, allSpots }) => {
+// Añadimos onOpenDetail a las props para poder actualizar el ID tras guardar
+export const SpotDetailModal = ({ spotId, externalData, onClose, onSuccess, allSpots, onOpenDetail }) => {
     const [spot, setSpot] = useState(null);
     const [loading, setLoading] = useState(true);
     const [comments, setComments] = useState([]);
@@ -11,7 +12,7 @@ export const SpotDetailModal = ({ spotId, externalData, onClose, onSuccess, allS
     const [address, setAddress] = useState("");
     const [description, setDescription] = useState("");
     const [imageUrl, setImageUrl] = useState("");
-    const [category, setCategory] = useState("parkings");
+    const [category, setCategory] = useState("parking"); // Valor por defecto técnico
 
     // Coordenadas
     const [lat, setLat] = useState(null);
@@ -47,12 +48,12 @@ export const SpotDetailModal = ({ spotId, externalData, onClose, onSuccess, allS
                     getAllComments()
                 ]);
                 setSpot(spotData);
-                setComments(allComments.filter(c => c.spot_id === parseInt(cleanId)));
+                setComments(allComments.filter(comment => Number(comment.spot_id) === Number(cleanId)));
 
                 setName(spotData?.name || "");
                 setAddress(spotData?.address || "");
                 setDescription(spotData?.description || "");
-                setCategory(spotData?.category || "parkings");
+                setCategory(spotData?.category || "parking");
                 setHasWater(spotData?.has_water || false);
                 setHasWaste(spotData?.has_waste_dump || false);
                 setHasLight(spotData?.has_electricity || false);
@@ -62,7 +63,7 @@ export const SpotDetailModal = ({ spotId, externalData, onClose, onSuccess, allS
             } else {
                 setName(externalData?.name || "Sitio sin nombre");
                 setAddress(externalData?.address || "Dirección no disponible");
-                setCategory("parkings");
+                setCategory("parking");
                 setLat(externalData?.latitude);
                 setLng(externalData?.longitude);
             }
@@ -72,7 +73,6 @@ export const SpotDetailModal = ({ spotId, externalData, onClose, onSuccess, allS
     }, [spotId, isExternal, externalData]);
 
     const handleAction = async () => {
-        // Validación: No permitir comentarios vacíos
         if (!newComment.trim()) {
             setErrorMessage("⚠️ Por favor, escribe un comentario para tu reseña.");
             return;
@@ -100,18 +100,31 @@ export const SpotDetailModal = ({ spotId, externalData, onClose, onSuccess, allS
             const result = await createSpot(data);
             if (result) {
                 alert("¡Lugar guardado en la comunidad!");
-                if (onSuccess) onSuccess();
-                onClose();
+                if (onSuccess) await onSuccess();
+                
+                // IMPORTANTE: Tu backend devuelve 'spot_id'. Saltamos al nuevo ID de la DB
+                if (onOpenDetail) {
+                    onOpenDetail(`db-${result.spot_id}`);
+                } else {
+                    onClose();
+                }
             } else {
                 setErrorMessage("❌ Error al guardar. Revisa tu conexión o el usuario.");
             }
         } else {
             const cleanId = String(spotId).replace('db-', '');
             const success = await createComment(cleanId, newComment, newRating);
+            
             if (success) {
+                const allComments = await getAllComments();
+                const updatedComments = allComments.filter(comment => 
+                    Number(comment.spot_id) === Number(cleanId)
+                );
+                setComments(updatedComments);
+                setNewComment("");
+                setNewRating(5);
                 alert("¡Reseña añadida!");
-                if (onSuccess) onSuccess();
-                onClose();
+                if (onSuccess) await onSuccess();
             } else {
                 setErrorMessage("❌ No se pudo enviar la reseña (¿estás logueado?)");
             }
@@ -147,12 +160,13 @@ export const SpotDetailModal = ({ spotId, externalData, onClose, onSuccess, allS
 
                             <div className="modal-body p-4">
                                 <div className="mb-3">
+                                    {/* CORRECCIÓN: Los values ahora coinciden con el Backend y el Mapa */}
                                     <select className="form-select form-select-sm border-0 bg-success bg-opacity-10 text-success fw-bold w-auto mb-2" value={category} onChange={e => setCategory(e.target.value)}>
-                                        <option value="areas y campings">🏕️ Áreas y Campings</option>
-                                        <option value="parkings">🅿️ Parkings</option>
-                                        <option value="vaciado y agua">💧 Vaciado y Agua</option>
-                                        <option value="gasolineras">⛽ Gasolineras</option>
-                                        <option value="supermercados">🛒 Supermercados</option>
+                                        <option value="campground">🏕️ Áreas y Campings</option>
+                                        <option value="parking">🅿️ Parkings</option>
+                                        <option value="water_waste">💧 Vaciado y Agua</option>
+                                        <option value="gas_station">⛽ Gasolineras</option>
+                                        <option value="supermarket">🛒 Supermercados</option>
                                     </select>
                                     <input className="form-control fw-bold h4 border-0 p-0 shadow-none mb-1 bg-transparent" value={name} readOnly={true} />
                                     <p className="text-muted small mb-3">📍 {address}</p>
@@ -193,9 +207,9 @@ export const SpotDetailModal = ({ spotId, externalData, onClose, onSuccess, allS
                                     <div className="mb-4">
                                         <h6 className="fw-bold small text-muted text-uppercase mb-3">Reseñas de la comunidad</h6>
                                         <div className="pe-2" style={{ maxHeight: '150px', overflowY: 'auto' }}>
-                                            {comments.map(c => (
-                                                <div key={c.coment_id} className="small bg-white p-2 rounded mb-2 border shadow-sm border-start border-success border-3">
-                                                    <strong>Usuario {c.user_id}</strong> ({c.rating}★) - {c.coment_text}
+                                            {comments.map(comment => (
+                                                <div key={comment.coment_id} className="small bg-white p-2 rounded mb-2 border shadow-sm border-start border-success border-3">
+                                                    <strong>Usuario {comment.user_id}</strong> ({comment.rating}★) - {comment.coment_text}
                                                 </div>
                                             ))}
                                         </div>
@@ -205,22 +219,15 @@ export const SpotDetailModal = ({ spotId, externalData, onClose, onSuccess, allS
                                 <label className="fw-bold small text-muted text-uppercase mb-1" style={{ fontSize: '0.7rem' }}>URL de la foto del lugar</label>
                                 <input className="form-control form-control-sm border-0 bg-light mb-4" value={imageUrl} onChange={e => setImageUrl(e.target.value)} placeholder="Pega el link de la imagen aquí..." />
 
-                                {/* MENSAJE DE ERROR VISUAL */}
                                 {errorMessage && (
                                     <div className="alert alert-danger py-2 small fw-bold text-center border-0 mb-3" style={{ fontSize: '0.85rem' }}>
                                         {errorMessage}
                                     </div>
                                 )}
 
-                                {isExternal && !isAlreadySaved ? (
-                                    <button className="btn btn-success w-100 fw-bold py-2 shadow-sm" onClick={handleAction}>
-                                        ➕ CONFIRMAR Y GUARDAR SITIO
-                                    </button>
-                                ) : (
-                                    <button className="btn btn-outline-success w-100 fw-bold py-2 shadow-sm" onClick={handleAction}>
-                                        {isExternal ? "✅ YA ESTÁ EN LA COMUNIDAD (AÑADIR RESEÑA)" : "ENVIAR RESEÑA / ACTUALIZAR"}
-                                    </button>
-                                )}
+                                <button className="btn btn-success w-100 fw-bold py-2 shadow-sm" onClick={handleAction}>
+                                    {isExternal && !isAlreadySaved ? "➕ CONFIRMAR Y GUARDAR SITIO" : "ENVIAR RESEÑA / ACTUALIZAR"}
+                                </button>
                             </div>
                         </>
                     )}
