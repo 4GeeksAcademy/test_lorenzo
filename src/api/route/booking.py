@@ -12,7 +12,7 @@ CORS(booking)
 
 
 @booking.route('/add', methods=['POST'])
-# @jwt_required()
+@jwt_required()
 def create_booking():
     data = request.get_json()
 
@@ -58,7 +58,7 @@ def create_booking():
     return jsonify(new_booking.serialize()), 201
 
 @booking.route('/all', methods=['GET'])
-# @jwt_required()
+@jwt_required()
 def get_all_bookings():
     all_bookings = Booking.query.all()
 
@@ -75,7 +75,7 @@ def get_all_bookings():
 
 
 @booking.route('/user/<int:user_id>', methods=['GET'])
-# @jwt_required()
+@jwt_required()
 def get_user_bookings(user_id):
     user_bookings = Booking.query.filter_by(user_id=user_id).all()
 
@@ -86,7 +86,7 @@ def get_user_bookings(user_id):
     return jsonify(results), 200
 
 @booking.route('/cancel/<int:booking_id>', methods=['PUT'])
-# @jwt_required()
+@jwt_required()
 def cancel_booking(booking_id):
     booking_to_cancel = Booking.query.get(booking_id)
 

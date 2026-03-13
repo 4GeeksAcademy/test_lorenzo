@@ -55,7 +55,7 @@ export const WelcomeModal = ({
         }
         dispatch({ type: "auth_set_user", payload: response });
         onClose();
-        navigate("/");
+        navigate("/user");
         
     }
     const handleClose = () => {
