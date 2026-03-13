@@ -49,7 +49,15 @@ export const Signup = () => {
             setError(response.error)
             return;
         }
-        navigate("/")
+        if (response.token) {
+        dispatch({ type: "auth_login", payload: { token: response.token } });
+        dispatch({ type: "auth_set_user", payload: response.user });
+        navigate("/"); 
+    } else {
+        
+        navigate("/login"); 
+    }
+        
 
     }
 
