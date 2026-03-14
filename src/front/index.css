@@ -199,3 +199,23 @@ mapbox-search-box:focus-within {
   z-index: 1001 !important; 
   top: 10px; 
 }
+
+.hero-container {
+    background-image: linear-gradient(
+        to bottom, 
+        rgba(0, 0, 0, 0.2), 
+        rgba(0, 0, 0, 0.6)
+    ), 
+    url("https://i.imgur.com/l3Bb92y.jpeg");
+    
+    background-size: cover;
+    background-position: center;
+    background-attachment: scroll; /* Cambia a 'fixed' para efecto Parallax */
+    height: 550px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+     
+}
