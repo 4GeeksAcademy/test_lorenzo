@@ -235,3 +235,21 @@ class Review_van(db.Model):
             "rating_review": self.rating_review
         }
 
+class Report(db.Model):
+    id: Mapped[int] = mapped_column(primary_key=True)
+    spot_id: Mapped[int] = mapped_column(ForeignKey("post_spot.spot_id"), nullable=False)
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
+    reason: Mapped[str] = mapped_column(String(250), nullable=True)
+    created_at: Mapped[date] = mapped_column(db.DateTime, default=db.func.now())
+
+    def __str__(self):
+        return f'<Report {self.id} - Spot {self.spot_id}>'
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "spot_id": self.spot_id,
+            "user_id": self.user_id,
+            "reason": self.reason,
+            "date": self.created_at.isoformat() if self.created_at else None
+        }

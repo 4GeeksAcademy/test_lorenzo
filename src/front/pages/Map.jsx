@@ -95,10 +95,14 @@ export const Map = () => {
     return [...visibleDbSpots, ...mapboxSpots].sort((a, b) => (b.rating || 0) - (a.rating || 0));
   }, [filteredStores, searchResults, mapBounds, filters.community, searchCategory]);
 
+  // detecta si el ID es de un punto nuevo para usar selectedStore
   const selectedSpotData = useMemo(() => {
     if (!infoModalSpotId) return null;
+    if (String(infoModalSpotId).startsWith('new-')) {
+        return selectedStore;
+    }
     return unifiedListForSidebar.find(s => s.id === infoModalSpotId);
-  }, [infoModalSpotId, unifiedListForSidebar]);
+  }, [infoModalSpotId, unifiedListForSidebar, selectedStore]);
 
   useEffect(() => {
     if (mapRef.current) return;
@@ -111,7 +115,6 @@ export const Map = () => {
         center: [-3.70379, 40.41678],
         zoom: 13
       });
-
 
       const geolocate = new mapboxgl.GeolocateControl({
         positionOptions: { enableHighAccuracy: true },
@@ -136,9 +139,48 @@ export const Map = () => {
 
     return () => {
       clearTimeout(timer);
-      if (mapRef.current) mapRef.current.remove();
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null; 
+      }
     };
-  }, []);
+  }, []); 
+
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    const handleMapClick = (e) => {
+        const features = mapRef.current.queryRenderedFeatures(e.point);
+        if (features.length > 0) {
+            console.log("Clic sobre un elemento existente, cancelando creación.");
+            return; 
+        }
+
+        const { lng, lat } = e.lngLat;
+        const newId = `new-${Date.now()}`;
+        
+        const newSpotData = {
+            id: newId,
+            spot_id: newId,
+            name: "", 
+            address: "Punto seleccionado en el mapa",
+            longitude: lng,
+            latitude: lat,
+            isCustom: false,
+            category: searchCategory || "parking", 
+            description: ""
+        };
+
+        setSelectedStore(newSpotData);
+        setInfoModalSpotId(newId);
+    };
+
+    mapRef.current.on('click', handleMapClick);
+
+    return () => {
+        if (mapRef.current) mapRef.current.off('click', handleMapClick);
+    };
+}, [isMapReady, searchCategory]);
 
   useEffect(() => {
     if (selectedStore && mapRef.current) {

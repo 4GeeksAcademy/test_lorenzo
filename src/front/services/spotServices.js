@@ -92,7 +92,7 @@ export const addSpotMedia = async (spotId, imageUrl) => {
     }
 };
 
-// --- SECCIÓN DE FETCH PARA COMENTARIOS  ---
+// --- Fetch para comentarios  ---
 
 export const getAllComments = async () => {
     try {
@@ -162,5 +162,31 @@ export const deleteComment = async (commentId) => {
     } catch (error) {
         console.error("Error al borrar:", error);
         return false;
+    }
+};
+
+//--- Para el reporte
+export const reportSpot = async (spotId, reason) => {
+    const token = localStorage.getItem('token'); 
+    
+    try {
+        const response = await fetch(`${API_URL}/spot/${spotId}/report`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ reason: reason })
+        });
+
+        const data = await response.json().catch(() => ({ msg: "Error inesperado en el servidor" }));
+        
+        return { 
+            success: response.ok, 
+            msg: data.msg || (response.ok ? "Reporte enviado" : "Error al reportar") 
+        };
+    } catch (error) {
+        console.error("Error en la conexión:", error);
+        return { success: false, msg: "No se pudo conectar con el servidor" };
     }
 };

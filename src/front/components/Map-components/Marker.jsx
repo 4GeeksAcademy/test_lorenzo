@@ -3,11 +3,11 @@ import { createPortal } from "react-dom";
 import mapboxgl from "mapbox-gl";
 
 // # svg del icono location dot
-const MarkerIcon = () => (
+const MarkerIcon = ({ color = "#00473C" }) => (
     <svg width="32" height="40" viewBox="0 0 640 640" xmlns="http://www.w3.org/2000/svg">
-        <path 
-            fill="#00473C" 
-            d="M128 252.6C128 148.4 214 64 320 64C426 64 512 148.4 512 252.6C512 371.9 391.8 514.9 341.6 569.4C329.8 582.2 310.1 582.2 298.3 569.4C248.1 514.9 127.9 371.9 127.9 252.6zM320 320C355.3 320 384 291.3 384 256C384 220.7 355.3 192 320 192C284.7 192 256 220.7 256 256C256 291.3 284.7 320 320 320z" 
+        <path
+            fill={color}
+            d="M128 252.6C128 148.4 214 64 320 64C426 64 512 148.4 512 252.6C512 371.9 391.8 514.9 341.6 569.4C329.8 582.2 310.1 582.2 298.3 569.4C248.1 514.9 127.9 371.9 127.9 252.6zM320 320C355.3 320 384 291.3 384 256C384 220.7 355.3 192 320 192C284.7 192 256 220.7 256 256C256 291.3 284.7 320 320 320z"
         />
     </svg>
 );
@@ -20,19 +20,29 @@ export const Marker = ({ map, store, onOpenDetail }) => {
     useEffect(() => {
         if (!map || !store) return;
 
-        // # Configuración del bocadillo (Popup)
-        const popup = new mapboxgl.Popup({
+        // 1. Crear el popup
+        const createPopup = new mapboxgl.Popup({
             offset: 40,
-            closeButton: true
+            closeButton: true,
+            closeOnClick: true,
         }).setDOMContent(popupElement.current);
 
-        // # Creación del marcador en el mapa
+        // 2. Crear el marcador
         markerRef.current = new mapboxgl.Marker(markerElement.current, { anchor: "bottom" })
             .setLngLat([store.longitude, store.latitude])
-            .setPopup(popup)
+            .setPopup(createPopup) 
             .addTo(map);
 
-        return () => markerRef.current?.remove();
+        // 3. Forzar apertura si es un punto recién creado 
+        if (String(store.spot_id).startsWith('new-')) {
+            createPopup.addTo(map);
+        }
+
+        return () => {
+            if (markerRef.current) {
+                markerRef.current.remove();
+            }
+        };
     }, [map, store]);
 
     // # Emojis para categoría
