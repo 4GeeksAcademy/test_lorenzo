@@ -7,7 +7,6 @@ from flask_migrate import Migrate
 from flask_swagger import swagger
 from api.utils import APIException, generate_sitemap
 from api.models import db
-from api.routes import api
 from api.route.auth import auth
 from api.route.booking import booking
 from api.route.spot import spot
@@ -50,7 +49,6 @@ setup_admin(app)
 setup_commands(app)
 
 # Add all endpoints form the API with a "api" prefix
-app.register_blueprint(api, url_prefix='/api')
 
 app.register_blueprint(auth, url_prefix='/auth')
 app.register_blueprint(spot, url_prefix='/spot')
