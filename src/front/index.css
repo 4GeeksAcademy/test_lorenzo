@@ -1,6 +1,5 @@
-
 :root {
-  --color-sg-green: #00473C;
+  --color-sg-green: #00473c;
   --color-sg-light-green: #f4f3e7;
 }
 
@@ -40,23 +39,24 @@
 /* --- BOTONES --- */
 .button-container {
   display: flex;
-  overflow-x: auto; 
-  white-space: nowrap; 
+  overflow-x: auto;
+  white-space: nowrap;
   gap: 10px;
   padding: 10px;
   position: absolute;
   top: 0;
   width: auto;
   z-index: 100;
-  scrollbar-width: none; 
+  scrollbar-width: none;
   max-width: calc(100% - 100px);
 }
 
 .button-container::-webkit-scrollbar {
-   display: none; }
+  display: none;
+}
 
 .category-button {
-  color: #1F2937;
+  color: #1f2937;
   background-color: #ffffff;
   border-radius: 9999px;
   padding: 0.5rem 1rem;
@@ -82,10 +82,10 @@
 }
 
 .search-area-button {
-  position: absolute; 
+  position: absolute;
   top: 80px;
-  left: 50%; 
-  transform: translateX(-50%); 
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 10;
   background-color: var(--color-sg-green);
   color: white;
@@ -104,9 +104,9 @@
     top: 0;
     width: 85%;
     transform: translateX(-100%);
-    box-shadow: 2px 0 10px rgba(0,0,0,0.2);
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
   }
-  
+
   .sidebar.open {
     transform: translateX(0);
   }
@@ -124,19 +124,21 @@
     border-radius: 30px;
     border: none;
     font-weight: bold;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
   }
   .category-button {
-    padding: 6px 10px; 
-    font-size: 0.75rem; 
+    padding: 6px 10px;
+    font-size: 0.75rem;
   }
   .button-container {
-    padding-left: 15px; 
+    padding-left: 15px;
     padding-right: 50px;
   }
 }
 
-.mobile-list-toggle { display: none; }
+.mobile-list-toggle {
+  display: none;
+}
 
 /* ---- BUSQUEDA MAPA (Actualizado) ---- */
 
@@ -173,10 +175,10 @@ mapbox-search-box:focus-within {
 
 /* --- BOTÓN BUSCAR EN ESTA ÁREA (Posición central) --- */
 .search-area-button {
-  position: absolute; 
+  position: absolute;
   top: 130px; /* Lo bajamos para que quede libre debajo del buscador */
-  left: 50%; 
-  transform: translateX(-50%); 
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 500;
   background-color: var(--color-sg-green);
   color: white;
@@ -185,37 +187,35 @@ mapbox-search-box:focus-within {
   border: none;
   font-weight: bold;
   font-size: 0.8rem;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
   cursor: pointer;
   transition: transform 0.2s ease;
 }
 
 .search-area-button:hover {
   transform: translateX(-50%) scale(1.05);
-  background-color: #00332b; 
+  background-color: #00332b;
 }
 
 .mapboxgl-ctrl-top-right {
-  z-index: 1001 !important; 
-  top: 10px; 
+  z-index: 1001 !important;
+  top: 10px;
 }
 
 .hero-container {
-    background-image: linear-gradient(
-        to bottom, 
-        rgba(0, 0, 0, 0.2), 
-        rgba(0, 0, 0, 0.6)
-    ), 
+  background-image:
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.6)),
     url("https://i.imgur.com/l3Bb92y.jpeg");
-    
-    background-size: cover;
-    background-position: center;
-    background-attachment: scroll; /* Cambia a 'fixed' para efecto Parallax */
-    height: 550px;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: center;
-     
+
+  background-size: cover;
+  background-position: center;
+  background-attachment: scroll;
+  height: 550px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; 
+  align-items: center;
+  margin-top: -80px;
+  display: flex;
 }

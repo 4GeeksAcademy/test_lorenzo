@@ -26,9 +26,9 @@ export const Navbar = () => {
 
 	return (
 		<>
-				<nav className="navbar navbar-expand-md">
+				<nav className="navbar navbar-expand-md w-100 mt-auto bg-black bg-opacity-25" style={{ backdropFilter: "blur(5px)" }}>
 					<div className="container-fluid">
-						<Link to="/" className="navbar-brand"><i className="fa-solid fa-van-shuttle fa-lg"></i></Link>
+						<Link to="/" className="navbar-brand text-white"><i className="fa-solid fa-van-shuttle fa-lg"></i></Link>
 
 						<button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
 							<span className="navbar-toggler-icon"></span>
@@ -36,8 +36,8 @@ export const Navbar = () => {
 
 						<div className="collapse navbar-collapse" id="navbarSupportedContent">
 							<ul className="navbar-nav mb-2 mb-md-0">
-								<li className="nav-item"><Link className="nav-link" to="/vans">Rent</Link></li>
-								<li className="nav-item"><Link className="nav-link" to="/map">Mapa</Link></li>
+								<li className="nav-item "><Link className="nav-link text-white fw-semibold" to="/vans">Rent</Link></li>
+								<li className="nav-item"><Link className="nav-link text-white fw-semibold" to="/map">Mapa</Link></li>
 							</ul>
 							<div className="d-flex ms-auto">
 								{isLogin ? (
