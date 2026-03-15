@@ -1,18 +1,14 @@
 export const initialStore=()=>{
   return{
     message: null,
-    todos: [
-      {
-        id: 1,
-        title: "Make the bed",
-        background: null,
-      },
-      {
-        id: 2,
-        title: "Do my homework",
-        background: null,
-      }
-    ]
+    vans: [],
+    booking: [],
+    token: localStorage.getItem("token") || null,
+    user: null,
+    spot:[],
+    fav_vans:[],
+    authReady: false
+    
   }
 }
 
@@ -23,16 +19,54 @@ export default function storeReducer(store, action = {}) {
         ...store,
         message: action.payload
       };
+
+    case "set_vans":
+        return {
+          ...store,
+          vans: action.payload
+        }
       
-    case 'add_task':
-
-      const { id,  color } = action.payload
-
-      return {
+      case "fav_vans":
+        return{
+          ...store,
+          fav_vans: action.payload
+        }
+      
+      case "set_spot":
+      return{
         ...store,
-        todos: store.todos.map((todo) => (todo.id === id ? { ...todo, background: color } : todo))
-      };
-    default:
+        spot: action.payload
+      }
+
+    case "set_booking":
+      return{
+          ...store,
+          booking: action.payload
+      }
+    
+    case "add_booking":
+      return{
+        ...store,
+        booking: [...store.booking, action.payload]
+      }
+
+    case "auth_login":{
+      const{token}= action.payload;
+      localStorage.setItem("token",token);
+      return{...store,token};
+    }
+      
+    case"auth_set_user":
+    return{...store, user:action.payload};
+      
+    case"auth_logout":
+    localStorage.removeItem("token");
+      
+    return{...store, token:null, user:null, authReady:true};
+      
+   default:
+
       throw Error('Unknown action.');
   }    
 }
+

@@ -4,14 +4,15 @@
 		"node": ">=20.0.0"
 	},
 	"version": "1.0.1",
+	"type":"module",
 	"description": "",
 	"main": "index.js",
 	"scripts": {
 		"dev": "vite",
-        "start": "vite",
-        "build": "vite build",
-        "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
-        "preview": "vite preview"
+		"start": "vite",
+		"build": "vite build",
+		"lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+		"preview": "vite preview"
 	},
 	"author": {
 		"name": "Alejandro Sanchez",
@@ -30,13 +31,13 @@
 	"license": "ISC",
 	"devDependencies": {
 		"@types/react": "^18.2.18",
-        "@types/react-dom": "^18.2.7",
-        "@vitejs/plugin-react": "^4.0.4",
-        "eslint": "^8.46.0",
-        "eslint-plugin-react": "^7.33.1",
-        "eslint-plugin-react-hooks": "^4.6.0",
-        "eslint-plugin-react-refresh": "^0.4.3",
-        "vite": "^4.4.8"
+		"@types/react-dom": "^18.2.7",
+		"@vitejs/plugin-react": "^4.0.4",
+		"eslint": "^8.46.0",
+		"eslint-plugin-react": "^7.33.1",
+		"eslint-plugin-react-hooks": "^4.6.0",
+		"eslint-plugin-react-refresh": "^0.4.3",
+		"vite": "^4.4.8"
 	},
 	"babel": {
 		"presets": [
@@ -54,9 +55,19 @@
 		]
 	},
 	"dependencies": {
+		"@mapbox/search-js-core": "^1.5.1",
+		"@mapbox/search-js-react": "^1.5.1",
+		"@mapbox/search-js-web": "^1.5.1",
+		"@tailwindcss/postcss": "^4.2.1",
+		"autoprefixer": "^10.4.27",
+		"date-fns": "^4.1.0",
+		"mapbox-gl": "^3.19.0",
+		"postcss": "^8.5.8",
 		"prop-types": "^15.8.1",
-        "react": "^18.2.0",
-        "react-dom": "^18.2.0",
-        "react-router-dom": "^6.18.0"
+		"react": "^18.2.0",
+		"react-datepicker": "^9.1.0",
+		"react-dom": "^18.2.0",
+		"react-router-dom": "^6.18.0",
+		"tailwindcss": "^4.2.1"
 	}
 }
