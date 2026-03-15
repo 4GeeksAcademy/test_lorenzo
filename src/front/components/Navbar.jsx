@@ -19,45 +19,51 @@ export const Navbar = () => {
 	useEffect(() => {
 		if (store.user?.user_name) {
 			setIsLogin(true)
-		} else{
+		} else {
 			setIsLogin(false)
 		}
 	}, [store.user])
 
 	return (
 		<>
-			<nav className="navbar navbar-expand-md bg-body-tertiary">
-				<div className="container-fluid">
-					<Link to="/" className="navbar-brand"><i className="fa-solid fa-van-shuttle fa-lg"></i></Link>
+				<nav className="navbar navbar-expand-md w-100 mt-auto bg-black bg-opacity-25" style={{ backdropFilter: "blur(5px)" }}>
+					<div className="container-fluid">
+						<Link to="/" className="navbar-brand text-white"><i className="fa-solid fa-van-shuttle fa-lg"></i></Link>
 
-					<button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
-						<span className="navbar-toggler-icon"></span>
-					</button>
+						<button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+							<span className="navbar-toggler-icon"></span>
+						</button>
 
-					<div className="collapse navbar-collapse" id="navbarSupportedContent">
-						<ul className="navbar-nav mb-2 mb-md-0">
-							<li className="nav-item"><Link className="nav-link" to="/vans">Rent</Link></li>
-							<li className="nav-item"><Link className="nav-link" to="/map">Mapa</Link></li>
-						</ul>
-						<div className="d-flex ms-auto">
-							{isLogin ? (
-								<button
-									className="btn btn-primary"
-									type="button"
-									data-bs-toggle="offcanvas"
-									data-bs-target="#offcanvasUser"
-								>
-									{btnTexte}
-								</button>
-							) : (
-								<Link to={btnTO}>
-									<button className="btn btn-primary">{btnTexte}</button>
-								</Link>
-							)}
+						<div className="collapse navbar-collapse" id="navbarSupportedContent">
+							<ul className="navbar-nav mb-2 mb-md-0">
+								<li className="nav-item "><Link className="nav-link text-white fw-semibold" to="/vans">Rent</Link></li>
+								<li className="nav-item"><Link className="nav-link text-white fw-semibold" to="/map">Mapa</Link></li>
+							</ul>
+							<div className="d-flex ms-auto">
+								{isLogin ? (
+									<button
+										className="btn btn-success px-5 py-2 fw-bold rounded-pill"
+										type="button"
+										data-bs-toggle="offcanvas"
+										data-bs-target="#offcanvasUser"
+									>
+										{btnTexte}
+									</button>
+								) : (
+									<div className="d-flex gap-2">
+										<Link to={btnTO}>
+											<button className="btn btn-success px-5 py-2 fw-bold rounded-pill">{btnTexte}</button>
+										</Link>
+										<Link to={"/login"}>
+											<button className="btn btn-success px-5 py-2 fw-bold rounded-pill">Login</button>
+										</Link>
+									</div>
+
+								)}
+							</div>
 						</div>
 					</div>
-				</div>
-			</nav>
+				</nav>
 			<OffcanvasUser id="offcanvasUser" />
 		</>
 	);
