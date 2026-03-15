@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 export const Sidebar = ({ stores, selectedStore, setSelectedStore, onOpenDetail }) => {
   const navigate = useNavigate();
 
-  // # Función para poner el emoji correcto
   const getCategoryIcon = (category) => {
     const icons = {
       campground: '🏕️',
@@ -18,7 +17,7 @@ export const Sidebar = ({ stores, selectedStore, setSelectedStore, onOpenDetail 
 
   return (
     <aside className="sidebar-container" style={{
-      width: '100%', // El ancho lo hereda del contenedor padre (350px en PC)
+      width: '100%',
       height: '100%',
       overflowY: 'auto',
       overflowX: 'hidden',
@@ -26,7 +25,6 @@ export const Sidebar = ({ stores, selectedStore, setSelectedStore, onOpenDetail 
       display: 'flex',
       flexDirection: 'column'
     }}>
-      {/* Cabecera sticky */}
       <header style={{
         padding: '15px',
         backgroundColor: '#00473C',
@@ -50,10 +48,13 @@ export const Sidebar = ({ stores, selectedStore, setSelectedStore, onOpenDetail 
         ) : (
           stores.map((store) => {
             const isSelected = selectedStore?.id === store.id;
+            
+            // Definimos si es comunidad dentro del map
+            const isFromCommunity = store.isCustom || (typeof store.id === 'string' && store.id.startsWith('db-'));
 
             return (
               <article
-                key={store.id} // Aquí está la clave única corregida
+                key={store.id} 
                 onClick={() => setSelectedStore(store)}
                 style={{
                   padding: '12px',
@@ -75,9 +76,8 @@ export const Sidebar = ({ stores, selectedStore, setSelectedStore, onOpenDetail 
                       {store.name}
                     </h3>
 
-                    {/* Rating o Etiqueta de Punto de Interés */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '4px' }}>
-                      {store.isCustom ? (
+                      {isFromCommunity ? (
                         <>
                           <span style={{ color: '#FFB800', fontSize: '0.8rem' }}>
                             {"★".repeat(Math.round(store.rating || 0)) + "☆".repeat(5 - Math.round(store.rating || 0))}
@@ -99,17 +99,16 @@ export const Sidebar = ({ stores, selectedStore, setSelectedStore, onOpenDetail 
                   </div>
                 </div>
 
-                {/* Botón de acción (Para ambos tipos de spots) */}
                 <div style={{ marginTop: '10px', display: 'flex', justifyContent: 'flex-end' }}>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      // Si es de la DB usamos spot_id, si es externo usamos su id
-                      onOpenDetail(store.spot_id || store.id);
+                      // Enviamos el store.id completo para que el modal no se pierda
+                      onOpenDetail(store.id);
                     }}
                     style={{ 
                       padding: '5px 12px', 
-                      backgroundColor: store.isCustom ? '#00473C' : '#6c757d', 
+                      backgroundColor: isFromCommunity ? '#00473C' : '#6c757d', 
                       color: 'white', 
                       border: 'none', 
                       borderRadius: '6px', 
@@ -118,7 +117,7 @@ export const Sidebar = ({ stores, selectedStore, setSelectedStore, onOpenDetail 
                       cursor: 'pointer' 
                     }}
                   >
-                    {store.isCustom ? "Ver detalles" : "Ver / Añadir"}
+                    {isFromCommunity ? "Ver detalles" : "Ver / Añadir"}
                   </button>
                 </div>
               </article>

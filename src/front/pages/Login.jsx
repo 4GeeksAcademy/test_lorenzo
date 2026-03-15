@@ -2,7 +2,6 @@ import { useEffect, useState } from "react"
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
 import { login} from "../services/loginServices.js";
 import { useNavigate } from "react-router-dom";
-import { WelcomeModal } from "../components/Welcomemodal.jsx";
 
 
 export const Login = () => {
@@ -30,6 +29,7 @@ export const Login = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
+        setLoading(true);
 
         if (!user.email.trim() || !user.password.trim()) {
             setError("Por favor, completa todos los campos.");
@@ -47,31 +47,17 @@ export const Login = () => {
 
         localStorage.setItem("token", response.token);
         dispatch({ type: "auth_login", payload: { token: response.token } });
-        
-        const hasUserName = response.user?.user_name
-        
-
-        if (!hasUserName){
-            setShowWelcomeModal(true);
-            setLoading(false);
-            return
-        }
         dispatch({type: "auth_set_user", payload:response.user});
 
+        setLoading(false)
         navigate("/")
 
     } 
 
-    useEffect(() => {
-        console.log(user)
-    }, [user])
 
 
     return (
         <div className="container py-5" >
-            {showWelcomeModal &&
-            <WelcomeModal show={showWelcomeModal} onClose={()=> setShowWelcomeModal(false)}/>
-             }
             <div className="row justify-content-center">
                 <div className="col-12 col-sm-10 col-md-10 col-lg-5">
                     <h1 className="text-center">Ingresa a tu cuenta</h1>

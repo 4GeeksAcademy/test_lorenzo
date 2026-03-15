@@ -30,6 +30,7 @@ export const Signup = () => {
         e.preventDefault();
         setError("");
 
+        // 1. Validaciones locales (antes de llamar a la API)
         if (!user.email.trim() || !user.password.trim() || !user.confirmPassword.trim()) {
             setError("Por favor, completa todos los campos.");
             return;
@@ -38,27 +39,41 @@ export const Signup = () => {
             setError("La contraseña debe tener al menos 6 caracteres.");
             return;
         }
-
         if (user.password !== user.confirmPassword) {
             setError("Las contraseñas no coinciden");
             return;
         }
-        setLoading(true);
-        const response = await signUp(user)
-        if (response.error) {
-            setError(response.error)
-            return;
-        }
-        if (response.token) {
-        dispatch({ type: "auth_login", payload: { token: response.token } });
-        dispatch({ type: "auth_set_user", payload: response.user });
-        navigate("/"); 
-    } else {
-        
-        navigate("/login"); 
-    }
-        
 
+        setLoading(true); // Bloqueamos el botón
+
+        try {
+            const response = await signUp(user);
+
+            // 2. Manejo de errores controlados del Backend (ej: email ya existe)
+            if (response.error) {
+                setError(response.error);
+                return; // Saltará al bloque 'finally' automáticamente
+            }
+
+            // 3. Éxito: Registro correcto
+            if (response.token) {
+                localStorage.setItem("token", response.token);
+                dispatch({ type: "auth_login", payload: { token: response.token } });
+                dispatch({ type: "auth_set_user", payload: response.user });
+                navigate("/");
+            } else {
+                // Caso borde por si no viene token pero no hay error explícito
+                navigate("/login");
+            }
+
+        } catch (err) {
+            // 4. Manejo de errores de red o caídas del servidor
+            console.error("Error en el registro:", err);
+            setError("No se pudo conectar con el servidor. Inténtalo más tarde.");
+        } finally {
+            // 5. El "Seguro de vida": Pase lo que pase, el botón se libera aquí
+            setLoading(false);
+        }
     }
 
     useEffect(() => {
@@ -139,7 +154,7 @@ export const Signup = () => {
                             </div>
 
                         </div>
-                        
+
                         <button
                             type="submit"
                             className="btn btn-primary w-100"

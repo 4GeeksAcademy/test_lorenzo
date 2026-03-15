@@ -11,10 +11,13 @@ export const getAllBooking = async (dispatch) => {
 };
 
 export const addBooking = async (bookingData, dispatch) => {
+  const token = localStorage.getItem("token");
+  
   const response = await fetch(`${API_URL}/booking/add`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
     },
     body: JSON.stringify(bookingData),
   });

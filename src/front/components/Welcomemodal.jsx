@@ -55,7 +55,7 @@ export const WelcomeModal = ({
         }
         dispatch({ type: "auth_set_user", payload: response });
         onClose();
-        navigate("/");
+        navigate("/user");
         
     }
     const handleClose = () => {
@@ -81,7 +81,7 @@ export const WelcomeModal = ({
                                 className="form-control form-control-sm" 
                                 value={username} 
                                 onChange={(e) => setUsername(e.target.value)} 
-                                placeholder="pablo_vlogs"
+                                
                             />
                         </div>
 
@@ -102,14 +102,14 @@ export const WelcomeModal = ({
 
                         <div className="mb-2">
                             <label className="form-label small fw-bold">Teléfono</label>
-                            <input type="number" className="form-control form-control-sm" id="phone" placeholder="600000000"
+                            <input type="number" className="form-control form-control-sm" id="phone" 
                             value={phone} 
                                 onChange={(e) => setPhone(e.target.value)} />
                         </div>
 
                         <div className="mb-2">
                             <label className="form-label small fw-bold">Dirección</label>
-                            <input type="text" className="form-control form-control-sm" id="address" placeholder="Calle Ejemplo, 123"
+                            <input type="text" className="form-control form-control-sm" id="address" 
                             value={address} 
                                 onChange={(e) => setAddress(e.target.value)} />
                         </div>

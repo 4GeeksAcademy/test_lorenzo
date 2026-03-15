@@ -1,7 +1,28 @@
 import { Link } from "react-router-dom";
-// import { OffcanvasUser } from "./OffcanvasUser";
+import { OffcanvasUser } from "./OffcanvasUser";
+import useGlobalReducer from "../hooks/useGlobalReducer";
+import { useEffect, useState } from "react";
 
 export const Navbar = () => {
+
+	const { store, dispatch } = useGlobalReducer()
+	const [isLogin, setIsLogin] = useState(false)
+
+	const btnTexte = isLogin
+		? store.user?.user_name
+		: "Signup"
+
+	const btnTO = isLogin
+		? "#"
+		: "/signup"
+
+	useEffect(() => {
+		if (store.user?.user_name) {
+			setIsLogin(true)
+		} else{
+			setIsLogin(false)
+		}
+	}, [store.user])
 
 	return (
 		<>
@@ -18,18 +39,26 @@ export const Navbar = () => {
 							<li className="nav-item"><Link className="nav-link" to="/vans">Rent</Link></li>
 							<li className="nav-item"><Link className="nav-link" to="/map">Mapa</Link></li>
 						</ul>
-						<div className="d-flex ms-auto gap-2">
-							<Link to="/signup">
-								<button className="btn btn-primary" type="submit">Signup</button>
-							</Link>
-							<div>
-								<button className="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasUser" aria-controls="offcanvasRight">USER</button>
-							</div>
+						<div className="d-flex ms-auto">
+							{isLogin ? (
+								<button
+									className="btn btn-primary"
+									type="button"
+									data-bs-toggle="offcanvas"
+									data-bs-target="#offcanvasUser"
+								>
+									{btnTexte}
+								</button>
+							) : (
+								<Link to={btnTO}>
+									<button className="btn btn-primary">{btnTexte}</button>
+								</Link>
+							)}
 						</div>
 					</div>
 				</div>
 			</nav>
-			{/* <OffcanvasUser id="offcanvasUser" /> */}
+			<OffcanvasUser id="offcanvasUser" />
 		</>
 	);
 };
