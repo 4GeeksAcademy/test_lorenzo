@@ -271,3 +271,13 @@ mapbox-search-box:focus-within {
   margin-right: 5px;
   margin-bottom: 5px;
 }
+
+.mapboxgl-popup-content {
+    pointer-events: all !important;
+    padding: 15px !important;
+}
+
+.custom-popup-content button {
+    position: relative;
+    z-index: 9999;
+}

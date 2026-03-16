@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'; // Añadido useCallback
 import mapboxgl from 'mapbox-gl';
 import { SearchBox } from '@mapbox/search-js-react';
 import { SearchBoxCore } from '@mapbox/search-js-core';
@@ -9,7 +9,6 @@ import { SpotDetailModal } from '../components/Map-components/SpotDetailModal';
 
 import '../../front/index.css';
 import 'mapbox-gl/dist/mapbox-gl.css';
-
 const MAPBOX_ACCESS_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 
 export const Map = () => {
@@ -36,6 +35,11 @@ export const Map = () => {
     community: false
   });
 
+  const handleOpenDetail = useCallback((id) => {
+    console.log("Abriendo detalle para:", id);
+    setInfoModalSpotId(id);
+  }, []);
+
   const loadSpots = async () => {
     const data = await getAllSpots();
     if (data) {
@@ -48,18 +52,13 @@ export const Map = () => {
     loadSpots();
   }, []);
 
-  // --- FILTRADO CORREGIDO ---
   const filteredStores = useMemo(() => {
     return (stores || []).filter(item => {
       const matchWater = !filters.water || item.has_water === true;
       const matchSleep = !filters.sleep || item.is_sleepable === true;
       const matchWaste = !filters.waste || item.has_waste_dump === true;
       const matchElectric = !filters.electricity || item.has_electricity === true;
-      
-      // Ajuste aquí: Si el botón comunidad está activo, mostramos solo los de la DB.
-      // Como 'stores' ya viene de la DB, simplemente dejamos que pasen si el filtro está activo.
       const matchCommunity = !filters.community || (item.id !== undefined || item.spot_id !== undefined);
-      
       const matchesCategory = !searchCategory || item.category === searchCategory;
 
       return matchWater && matchSleep && matchWaste && matchElectric && matchCommunity && matchesCategory;
@@ -128,7 +127,7 @@ export const Map = () => {
         trackUserLocation: true,
         showUserHeading: true
       }), 'top-right');
-      
+
       mapRef.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
       mapRef.current.on('load', () => {
@@ -152,41 +151,37 @@ export const Map = () => {
     };
   }, []);
 
-  // --- LOGICA DE CLIC CORREGIDA (ORDEN DE VARIABLES) ---
   useEffect(() => {
     if (!mapRef.current) return;
 
     const handleMapClick = (e) => {
-        // 1. Primero detectamos features
-        const features = mapRef.current.queryRenderedFeatures(e.point);
+      const target = e.originalEvent.target;
 
-        // 2. Comprobamos si hay algo que bloquee la creación
-        const isClickOnFeature = features.some(f => 
-            f.layer?.type === 'symbol' || f.layer?.id?.includes('marker')
-        );
+      if (target.closest('.mapboxgl-marker') || target.closest('.mapboxgl-popup')) {
+        console.log("Clic ignorado por estar sobre UI existente.");
+        return;
+      }
 
-        if (isClickOnFeature) {
-            console.log("Clic bloqueado por elemento existente.");
-            return;
-        }
+      const features = mapRef.current.queryRenderedFeatures(e.point);
+      if (features.some(f => f.layer?.type === 'symbol')) return;
 
-        const { lng, lat } = e.lngLat;
-        const newId = `new-${Date.now()}`;
+      const { lng, lat } = e.lngLat;
+      const newId = `new-${Date.now()}`;
 
-        const newSpotData = {
-            id: newId,
-            spot_id: newId,
-            name: "",
-            address: "Punto seleccionado en el mapa",
-            longitude: lng,
-            latitude: lat,
-            isCustom: false,
-            category: searchCategory || "parking",
-            description: ""
-        };
+      const newSpotData = {
+        id: newId,
+        spot_id: newId,
+        name: "",
+        address: "Punto seleccionado en el mapa",
+        longitude: lng,
+        latitude: lat,
+        isCustom: false,
+        category: searchCategory || "parking",
+      };
 
-        setSelectedStore(newSpotData);
-        setInfoModalSpotId(newId);
+      setSelectedStore(newSpotData);
+
+      handleOpenDetail(newId);
     };
 
     mapRef.current.on('click', handleMapClick);
@@ -194,7 +189,7 @@ export const Map = () => {
     return () => {
       if (mapRef.current) mapRef.current.off('click', handleMapClick);
     };
-  }, [isMapReady, searchCategory]);
+  }, [isMapReady, searchCategory, handleOpenDetail]);
 
   const performCategorySearch = async () => {
     if (!searchCategory || !mapBounds || !searchRef.current) return;
@@ -225,25 +220,30 @@ export const Map = () => {
   ];
 
   return (
-    <div className="map-main-container ">
+    <div className="map-main-container">
       <div className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
         <Sidebar
-          key={`sidebar-${unifiedListForSidebar.length}`}
           stores={unifiedListForSidebar}
           setSelectedStore={(store) => {
             setSelectedStore(store);
-            setIsSidebarOpen(false);
+            if (mapRef.current && store.longitude && store.latitude) {
+              mapRef.current.flyTo({
+                center: [store.longitude, store.latitude],
+                zoom: 15,
+                essential: true
+              });
+            }
           }}
-          onOpenDetail={setInfoModalSpotId}
+          onOpenDetail={handleOpenDetail}
         />
       </div>
 
       <div className="map-wrapper" onClick={() => { if (isSidebarOpen) setIsSidebarOpen(false) }}>
         <div className="button-container">
           <button
-            onClick={(e) => { 
-                e.stopPropagation(); 
-                setFilters(prev => ({ ...prev, community: !prev.community })); 
+            onClick={(e) => {
+              e.stopPropagation();
+              setFilters(prev => ({ ...prev, community: !prev.community }));
             }}
             className={`category-button ${filters.community ? 'active community-active' : ''}`}
             style={{ backgroundColor: filters.community ? '#00473C' : '#fff', color: filters.community ? '#fff' : '#000', fontWeight: 'bold' }}
@@ -292,13 +292,13 @@ export const Map = () => {
 
         <div ref={mapContainerRef} id="map-container" />
 
-        {/* Marcadores DB */}
+        {/* Marcadores DB  */}
         {isMapReady && filteredStores.map((store) => (
           <Marker
             key={`db-${store.spot_id || store.id}`}
             map={mapRef.current}
             store={store}
-            onOpenDetail={setInfoModalSpotId}
+            onOpenDetail={handleOpenDetail}
           />
         ))}
 
@@ -311,7 +311,7 @@ export const Map = () => {
               <Marker
                 key={`ext-${featureId}`}
                 map={mapRef.current}
-                onOpenDetail={setInfoModalSpotId}
+                onOpenDetail={handleOpenDetail}
                 store={{
                   spot_id: featureId,
                   id: featureId,
@@ -333,7 +333,7 @@ export const Map = () => {
             onClose={() => setInfoModalSpotId(null)}
             onSuccess={loadSpots}
             allSpots={stores}
-            onOpenDetail={setInfoModalSpotId}
+            onOpenDetail={handleOpenDetail}
           />
         )}
       </div>

@@ -2,7 +2,6 @@ import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import mapboxgl from "mapbox-gl";
 
-// # svg del icono location dot
 const MarkerIcon = ({ color = "#00473C" }) => (
     <svg width="32" height="40" viewBox="0 0 640 640" xmlns="http://www.w3.org/2000/svg">
         <path
@@ -18,34 +17,32 @@ export const Marker = ({ map, store, onOpenDetail }) => {
     const popupElement = useRef(document.createElement("div"));
 
     useEffect(() => {
-        if (!map || !store) return;
+    if (!map || !store) return;
 
-        // 1. Crear el popup
-        const createPopup = new mapboxgl.Popup({
-            offset: 40,
-            closeButton: true,
-            closeOnClick: true,
-        }).setDOMContent(popupElement.current);
+    const el = markerElement.current;
 
-        // 2. Crear el marcador
-        markerRef.current = new mapboxgl.Marker(markerElement.current, { anchor: "bottom" })
-            .setLngLat([store.longitude, store.latitude])
-            .setPopup(createPopup) 
-            .addTo(map);
+    const popup = new mapboxgl.Popup({
+        offset: 40,
+        closeButton: true,
+        closeOnClick: true,
+    }).setDOMContent(popupElement.current);
 
-        // 3. Forzar apertura si es un punto recién creado 
-        if (String(store.spot_id).startsWith('new-')) {
-            createPopup.addTo(map);
+    markerRef.current = new mapboxgl.Marker(el, { anchor: "bottom" })
+        .setLngLat([store.longitude, store.latitude])
+        .setPopup(popup)
+        .addTo(map);
+
+    if (String(store.spot_id).startsWith('new-')) {
+        popup.addTo(map);
+    }
+
+    return () => {
+        if (markerRef.current) {
+            markerRef.current.remove();
         }
+    };
+}, [map, store]);
 
-        return () => {
-            if (markerRef.current) {
-                markerRef.current.remove();
-            }
-        };
-    }, [map, store]);
-
-    // # Emojis para categoría
     let emoji = "📍";
     if (store.category === "campground") emoji = "🏕️";
     if (store.category === "parking") emoji = "🅿️";
@@ -53,7 +50,6 @@ export const Marker = ({ map, store, onOpenDetail }) => {
     if (store.category === "gas_station") emoji = "⛽";
     if (store.category === "supermarket") emoji = "🛒";
 
-    // # Función para pintar las estrellas
     const renderStars = (rating) => {
         if (!rating && rating !== 0) return <span style={{ color: '#888', fontSize: '11px' }}>Sin reseñas</span>;
         const rounded = Math.round(rating);
@@ -67,18 +63,41 @@ export const Marker = ({ map, store, onOpenDetail }) => {
 
     return (
         <>
-            {/*  Contenido del Popup */}
             {createPortal(
                 <div style={{ padding: '10px', minWidth: '160px', color: '#333' }}>
                     <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{store.name}</div>
-                    <div style={{ fontSize: '11px', color: '#666', marginBottom: '8px' }}>{store.address || "Sin dirección"}</div>
+                    <div style={{ fontSize: '11px', color: '#666', marginBottom: '8px' }}>
+                        {store.address || "Sin dirección"}
+                    </div>
+
                     {renderStars(store.rating)}
+
+                    {/* Añadimos la clase 'btn-ver-detalle' para que el listener nativo lo encuentre */}
                     <button
+                        type="button"
                         onClick={(e) => {
+                            // MUY IMPORTANTE: Estos dos bloquean al mapa pero activan la función
+                            e.preventDefault();
                             e.stopPropagation();
-                            onOpenDetail(store.spot_id);
+
+                            const rawId = store.spot_id || store.id;
+                            let finalId = String(rawId);
+                            if (!finalId.includes('-')) finalId = `db-${finalId}`;
+
+                            console.log("Ejecutando onOpenDetail para:", finalId);
+                            onOpenDetail(finalId);
                         }}
-                        style={{ width: '100%', backgroundColor: '#00473C', color: 'white', border: 'none', padding: '7px', borderRadius: '4px', cursor: 'pointer' }}
+                        style={{
+                            width: '100%',
+                            backgroundColor: '#00473C',
+                            color: 'white',
+                            border: 'none',
+                            padding: '10px',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontWeight: 'bold',
+                            marginTop: '8px'
+                        }}
                     >
                         Ver detalles
                     </button>
@@ -86,11 +105,17 @@ export const Marker = ({ map, store, onOpenDetail }) => {
                 popupElement.current
             )}
 
-            {/*  Icono en el mapa */}
             {createPortal(
                 <div style={{ position: 'relative', cursor: 'pointer' }}>
                     <MarkerIcon />
-                    <div style={{ position: 'absolute', top: '6px', left: '50%', transform: 'translateX(-50%)', fontSize: '15px' }}>
+                    <div style={{
+                        position: 'absolute',
+                        top: '6px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        fontSize: '15px',
+                        pointerEvents: 'none'
+                    }}>
                         {emoji}
                     </div>
                 </div>,
