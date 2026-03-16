@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, url_for, Blueprint
-from api.models import db, User, Post_spot, Media_spot, Coment, Report
+from api.models import db, User, Post_spot, Media_spot, Coment
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
 from sqlalchemy import select
@@ -196,43 +196,4 @@ def delete_media(media_id):
     
     return jsonify({"msg": "Foto eliminada correctamente"}), 200
 
-@spot.route('/<int:spot_id>/report', methods=['POST'])
-@jwt_required()
-def report_spot(spot_id):
-    current_user_id = get_jwt_identity()
-    
-    exists = Report.query.filter_by(spot_id=spot_id, user_id=current_user_id).first()
-    if exists:
-        return jsonify({"msg": "Ya has enviado un reporte para este lugar anteriormente."}), 400
 
-    data = request.json
-    new_report = Report(
-        spot_id=spot_id,
-        user_id=current_user_id,
-        reason=data.get("reason", "Inseguridad / Información falsa")
-    )
-
-    db.session.add(new_report)
-    db.session.commit()
-    
-    return jsonify({"msg": "Reporte registrado. Gracias por ayudar a la comunidad."}), 201
-
-@spot.route('/admin/reports', methods=['GET'])
-@jwt_required() 
-def get_all_reports():
-    all_reports = Report.query.all()
-    
-    results = []
-    for rep in all_reports:
-        user = User.query.get(rep.user_id)
-        lugar = Post_spot.query.get(rep.spot_id)
-        
-        results.append({
-            "report_id": rep.id,
-            "usuario_que_reporta": user.user_name if user else "Desconocido",
-            "punto_afectado": lugar.name if lugar else "Punto eliminado",
-            "motivo": rep.reason,
-            "fecha": rep.created_at.strftime("%Y-%m-%d")
-        })
-        
-    return jsonify(results), 200
