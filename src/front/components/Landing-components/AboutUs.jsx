@@ -9,9 +9,9 @@ export const AboutUs = () => {
     ];
 
     const Equipo = [
-        { name: "Joset", img: "fa-regular fa-user fa-2xl", text: "Para del nuestro equipo" },
-        { name: "Santiago", img: "fa-regular fa-user fa-2xl", text: "Para del nuestro equipo" },
-        { name: "Lorenzo", img: "fa-regular fa-user fa-2xl", text: "Para del nuestro equipo" }
+        { name: "Joset", img: "fa-regular fa-user fa-2xl", text: "Parte del nuestro equipo" },
+        { name: "Santiago", img: "fa-regular fa-user fa-2xl", text: "Parte del nuestro equipo" },
+        { name: "Lorenzo", img: "fa-regular fa-user fa-2xl", text: "Parte del nuestro equipo" }
     ]
 
     return (
@@ -70,7 +70,7 @@ export const AboutUs = () => {
 
             <hr className="my-5" />
             <h2 className="display-6">¿Listo para unirte?</h2>
-            <p className="fs-4">Forma parte de esta comunidad compartiendo y descubriendo eso lugares desconocidos</p>
+            <p className="fs-4">Forma parte de esta comunidad compartiendo y descubriendo esos lugares desconocidos</p>
             <div className="d-flex gap-3">
                 <Link to={"/signup"}>
                     <button className="btn btn-success px-5 py-2 fw-bold rounded-pill">¡Registrate ya!</button>
