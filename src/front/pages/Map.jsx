@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react'; // Añadido useCallback
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { SearchBox } from '@mapbox/search-js-react';
 import { SearchBoxCore } from '@mapbox/search-js-core';
@@ -144,12 +144,24 @@ export const Map = () => {
 
     return () => {
       clearTimeout(timer);
-      if (mapRef.current) {
-        mapRef.current.remove();
-        mapRef.current = null;
-      }
     };
-  }, []);
+  }, []); 
+
+  useEffect(() => {
+  if (!mapRef.current) return;
+
+  const updateSearchButton = () => {
+    if (searchCategory && searchCategory !== "water_waste") {
+      setShowSearchAreaButton(true);
+    }
+  };
+
+  mapRef.current.on('moveend', updateSearchButton);
+
+  return () => {
+    if (mapRef.current) mapRef.current.off('moveend', updateSearchButton);
+  };
+}, [searchCategory]); 
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -292,7 +304,6 @@ export const Map = () => {
 
         <div ref={mapContainerRef} id="map-container" />
 
-        {/* Marcadores DB  */}
         {isMapReady && filteredStores.map((store) => (
           <Marker
             key={`db-${store.spot_id || store.id}`}
@@ -302,7 +313,6 @@ export const Map = () => {
           />
         ))}
 
-        {/* Marcadores Mapbox */}
         {isMapReady && !filters.community && searchResults
           .filter(mapboxItem => !stores.some(dbSpot => dbSpot.name?.toLowerCase() === mapboxItem.properties.name?.toLowerCase()))
           .map((feature, index) => {

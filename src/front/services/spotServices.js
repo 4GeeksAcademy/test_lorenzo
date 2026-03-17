@@ -72,13 +72,13 @@ export const createSpot = async (spotData) => {
 };
 //para añadir una foto al spot
 export const addSpotMedia = async (spotId, imageUrl) => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("token"); 
     try {
         const response = await fetch(`${API_URL}/spot/spots/${spotId}/media`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
+                "Authorization": `Bearer ${token}` 
             },
             body: JSON.stringify({
                 url: imageUrl,

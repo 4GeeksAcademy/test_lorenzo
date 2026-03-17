@@ -15,12 +15,14 @@ favorite_spot = Table(
     Column("Spot_id", ForeignKey("post_spot.spot_id"), nullable=False)
 )
 
+
 class User(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
     email: Mapped[str] = mapped_column(
         String(120), unique=True, nullable=False)
     password_hash: Mapped[str] = mapped_column(nullable=False)
-    user_name:Mapped[str] = mapped_column(String(120), unique=True, nullable=True)
+    user_name: Mapped[str] = mapped_column(
+        String(120), unique=True, nullable=True)
     name: Mapped[str] = mapped_column(String(120), nullable=True)
     last_name: Mapped[str] = mapped_column(String(120), nullable=True)
     phone: Mapped[str] = mapped_column(String(20), unique=True, nullable=True)
@@ -28,13 +30,16 @@ class User(db.Model):
     # is_active: Mapped[bool] = mapped_column(Boolean(), nullable=False)
 
     coment: Mapped[list["Coment"]] = relationship(back_populates="user_coment")
-    post_spot: Mapped[list["Post_spot"]] = relationship(back_populates="user_post")
-    booking: Mapped[list["Booking"]] = relationship(back_populates="user_booking")
-    review_user: Mapped[list["Review_van"]] = relationship(back_populates="user_id_review")
+    post_spot: Mapped[list["Post_spot"]] = relationship(
+        back_populates="user_post")
+    booking: Mapped[list["Booking"]] = relationship(
+        back_populates="user_booking")
+    review_user: Mapped[list["Review_van"]] = relationship(
+        back_populates="user_id_review")
     fav_spot: Mapped[list["Post_spot"]] = relationship(
         "Post_spot",
-        secondary =  favorite_spot,
-        back_populates= "fav_spot_by"
+        secondary=favorite_spot,
+        back_populates="fav_spot_by"
     )
 
     def set_password(self, password):
@@ -47,7 +52,7 @@ class User(db.Model):
         return {
             "id": self.id,
             "email": self.email,
-            "user_name":self.user_name,
+            "user_name": self.user_name,
             "name": self.name,
             "last_name": self.last_name,
             "phone": self.phone,
@@ -56,6 +61,7 @@ class User(db.Model):
             # do not serialize the password, its a security breach
         }
 
+
 class Vehicle(db.Model):
     car_id: Mapped[int] = mapped_column(primary_key=True)
     brand: Mapped[str] = mapped_column(String(120), nullable=False)
@@ -63,18 +69,22 @@ class Vehicle(db.Model):
     description: Mapped[str] = mapped_column(String(500), nullable=False)
     capacity: Mapped[int] = mapped_column(Integer, nullable=False)
     type_vehicle: Mapped[str] = mapped_column(String(120), nullable=False)
-    price_per_day: Mapped[float] = mapped_column(Numeric(precision=10, scale=2), nullable=False)
-    available: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    price_per_day: Mapped[float] = mapped_column(
+        Numeric(precision=10, scale=2), nullable=False)
+    available: Mapped[bool] = mapped_column(
+        Boolean, default=True, nullable=False)
 
-    booking: Mapped[list["Booking"]] = relationship(back_populates="van_booking")
-    review_car: Mapped[list["Review_van"]] = relationship(back_populates="car_id_review")
-    media: Mapped[list["Media_vehicle"]] =relationship(back_populates="vehicle")
-
+    booking: Mapped[list["Booking"]] = relationship(
+        back_populates="van_booking")
+    review_car: Mapped[list["Review_van"]] = relationship(
+        back_populates="car_id_review")
+    media: Mapped[list["Media_vehicle"]] = relationship(
+        back_populates="vehicle")
 
     def serialize(self):
         return {
             "car_id": self.car_id,
-            "brand":self.brand,
+            "brand": self.brand,
             "model": self.model,
             "description": self.description,
             "capacity": self.capacity,
@@ -82,14 +92,16 @@ class Vehicle(db.Model):
             "price_per_day": float(self.price_per_day) if self.price_per_day is not None else None,
             "available": self.available,
             "media": [item.serialize() for item in self.media],
-            "booking" : [item.serialize() for item in self.booking if item.status != "cancelled"]
+            "booking": [item.serialize() for item in self.booking if item.status != "cancelled"]
         }
-    
+
+
 class Media_vehicle(db.Model):
     media_vehicle_id: Mapped[int] = mapped_column(primary_key=True)
-    car_id: Mapped[int] = mapped_column(ForeignKey("vehicle.car_id"), nullable=False)
+    car_id: Mapped[int] = mapped_column(
+        ForeignKey("vehicle.car_id"), nullable=False)
     url_vehicle: Mapped[str] = mapped_column(String(255), nullable=False)
-    media_type: Mapped[str] = mapped_column(String(50), nullable=True) 
+    media_type: Mapped[str] = mapped_column(String(50), nullable=True)
 
     vehicle: Mapped["Vehicle"] = relationship(back_populates="media")
 
@@ -100,6 +112,7 @@ class Media_vehicle(db.Model):
             "url_vehicle": self.url_vehicle,
             "media_type": self.media_type,
         }
+
 
 class Post_spot(db.Model):
     spot_id: Mapped[int] = mapped_column(primary_key=True)
@@ -122,41 +135,51 @@ class Post_spot(db.Model):
         Boolean, default=False, nullable=True)
     has_waste_dump: Mapped[bool] = mapped_column(
         Boolean, default=False, nullable=True)
-    has_electricity: Mapped[bool] = mapped_column(Boolean, default=False, nullable=True)
-    
-    user_post : Mapped["User"] = relationship(back_populates="post_spot")
+    has_electricity: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=True)
+
+    user_post: Mapped["User"] = relationship(back_populates="post_spot")
     post: Mapped[list["Coment"]] = relationship(back_populates="post_coment")
-    spot_media: Mapped[list["Media_spot"]] =relationship(back_populates="media_spot")
+    spot_media: Mapped[list["Media_spot"]] = relationship(
+        back_populates="media_spot")
     fav_spot_by: Mapped[list["User"]] = relationship(
         "User",
-        secondary = favorite_spot,
-        back_populates = "fav_spot"
+        secondary=favorite_spot,
+        back_populates="fav_spot"
     )
 
     def serialize(self):
+        ratings = [c.rating for c in self.post if c.rating is not None]
+        avg_rating = sum(ratings) / len(ratings) if ratings else 0
+
         return {
-            "spot_id": self.spot_id,
-            "user_id": self.user_id,
-            "name": self.name,
-            "category": self.category,
-            "description": self.description,
-            "address": self.address, 
-            "city": self.city,
-            "phone_formatted": self.phone_formatted,
-            "longitude": float(self.longitude) if self.longitude is not None else 0.0,
-            "latitude": float(self.latitude) if self.latitude is not None else 0.0,
-            "rating": float(self.rating) if self.rating is not None else 0.0,
-            "is_sleepable": self.is_sleepable,
-            "has_water": self.has_water,
-            "has_waste_dump": self.has_waste_dump,
-            "has_electricity": self.has_electricity
-        }
+        "spot_id": self.spot_id,
+        "user_id": self.user_id,
+        "name": self.name,
+        "user_name": self.user_post.user_name if self.user_post else "Usuario anónimo",
+        "category": self.category,
+        "description": self.description,
+        "address": self.address,
+        "city": self.city,
+        "phone_formatted": self.phone_formatted,
+        "longitude": float(self.longitude) if self.longitude is not None else 0.0,
+        "latitude": float(self.latitude) if self.latitude is not None else 0.0,
+        "rating": float(self.rating) if self.rating is not None else 0.0,
+        "is_sleepable": self.is_sleepable,
+        "has_water": self.has_water,
+        "has_waste_dump": self.has_waste_dump,
+        "has_electricity": self.has_electricity,
+        "rating": round(avg_rating, 1),
+        "media": [item.serialize() for item in self.spot_media]
+    }
+
 
 class Media_spot(db.Model):
     media_id: Mapped[int] = mapped_column(primary_key=True)
-    post_id: Mapped[int] = mapped_column(ForeignKey("post_spot.spot_id"), nullable=False)
-    url: Mapped[str] = mapped_column(String(255), nullable=False)
-    media_type: Mapped[str] = mapped_column(String(50), nullable=True) 
+    post_id: Mapped[int] = mapped_column(
+        ForeignKey("post_spot.spot_id"), nullable=False)
+    url: Mapped[str] = mapped_column(db.Text, nullable=False)
+    media_type: Mapped[str] = mapped_column(String(50), nullable=True)
 
     media_spot: Mapped["Post_spot"] = relationship(back_populates="spot_media")
 
@@ -172,61 +195,75 @@ class Media_spot(db.Model):
 class Booking(db.Model):
     booking_id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
-    car_id: Mapped[int] = mapped_column(ForeignKey("vehicle.car_id"), nullable=False)
+    car_id: Mapped[int] = mapped_column(
+        ForeignKey("vehicle.car_id"), nullable=False)
     start_date: Mapped[date] = mapped_column(db.Date, nullable=False)
     end_date: Mapped[date] = mapped_column(db.Date, nullable=False)
-    status: Mapped[str] = mapped_column(String(50), default="pending") # pending, confirmed, cancelled
-    total_price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
+    status: Mapped[str] = mapped_column(
+        String(50), default="pending")  # pending, confirmed, cancelled
+    total_price: Mapped[Decimal] = mapped_column(
+        Numeric(10, 2), nullable=False)
 
     user_booking: Mapped["User"] = relationship(back_populates="booking")
     van_booking: Mapped["Vehicle"] = relationship(back_populates="booking")
-    review_booking: Mapped[list["Review_van"]] = relationship(back_populates="bookking_id_review")
+    review_booking: Mapped[list["Review_van"]] = relationship(
+        back_populates="bookking_id_review")
 
     def serialize(self):
         return {
             "booking_id": self.booking_id,
             "user_id": self.user_id,
             "car_id": self.car_id,
-            "start_date": self.start_date.isoformat(), # isoformat lo convierte en "AAAA-MM-DD"
+            # isoformat lo convierte en "AAAA-MM-DD"
+            "start_date": self.start_date.isoformat(),
             "end_date": self.end_date.isoformat(),
             "status": self.status,
-            "total_price": float(self.total_price) # aqui se pasa a float para que el JSON lo acepte 
+            # aqui se pasa a float para que el JSON lo acepte
+            "total_price": float(self.total_price)
         }
-    
+
+
 class Coment (db.Model):
     coment_id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False) #FK
-    spot_id: Mapped[int] = mapped_column(ForeignKey("post_spot.spot_id"), nullable=False) #FK
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("user.id"), nullable=False)  # FK
+    spot_id: Mapped[int] = mapped_column(
+        ForeignKey("post_spot.spot_id"), nullable=False)  # FK
     rating: Mapped[int] = mapped_column(nullable=False)
     coment_text: Mapped[str] = mapped_column(String(450), nullable=False)
 
-    user_coment : Mapped["User"] = relationship(back_populates="coment")
-    post_coment : Mapped["Post_spot"] = relationship(back_populates="post")
+    user_coment: Mapped["User"] = relationship(back_populates="coment")
+    post_coment: Mapped["Post_spot"] = relationship(back_populates="post")
 
     def serialize(self):
-        return{
-        "coment_id": self.coment_id,
-        "user_id": self.user_id,
-        "spot_id": self.spot_id,
-        "rating": self.rating,
-        "coment_text": self.coment_text,
-        "user_name": self.user_coment.user_name if self.user_coment else "Usuario anónimo"
+        return {
+            "coment_id": self.coment_id,
+            "user_id": self.user_id,
+            "spot_id": self.spot_id,
+            "rating": self.rating,
+            "coment_text": self.coment_text,
+            "user_name": self.user_coment.user_name if self.user_coment else "Usuario anónimo"
         }
-    
+
+
 class Review_van(db.Model):
-    review_van_id: Mapped[int] = mapped_column(primary_key = True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable= False)
-    bookking_id: Mapped[int] = mapped_column(ForeignKey("booking.booking_id"), nullable=False)
-    car_id: Mapped[int] = mapped_column(ForeignKey("vehicle.car_id"), nullable= False)
-    coment_review: Mapped[str]= mapped_column(String(450), nullable=True)
-    rating_review: Mapped[int]= mapped_column(nullable=False)
+    review_van_id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=False)
+    bookking_id: Mapped[int] = mapped_column(
+        ForeignKey("booking.booking_id"), nullable=False)
+    car_id: Mapped[int] = mapped_column(
+        ForeignKey("vehicle.car_id"), nullable=False)
+    coment_review: Mapped[str] = mapped_column(String(450), nullable=True)
+    rating_review: Mapped[int] = mapped_column(nullable=False)
 
     user_id_review: Mapped["User"] = relationship(back_populates="review_user")
-    car_id_review: Mapped["Vehicle"] = relationship(back_populates="review_car")
-    bookking_id_review: Mapped["Booking"] = relationship(back_populates="review_booking")
+    car_id_review: Mapped["Vehicle"] = relationship(
+        back_populates="review_car")
+    bookking_id_review: Mapped["Booking"] = relationship(
+        back_populates="review_booking")
 
     def serialize(self):
-        return{
+        return {
             "review_van_id": self.review_van_id,
             "user_id": self.user_id,
             "booking_id": self.bookking_id,
