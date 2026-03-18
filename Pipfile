@@ -21,6 +21,8 @@ sqlalchemy = "*"
 flask-bcrypt = "*"
 flask-jwt-extended = "*"
 flask-cors = "*"
+mailtrap = "*"
+flask-mail = "*"
 
 [requires]
 python_version = "3.13"

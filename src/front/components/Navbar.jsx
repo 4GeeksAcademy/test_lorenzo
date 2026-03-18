@@ -26,7 +26,7 @@ export const Navbar = () => {
 
 	return (
 		<>
-				<nav className="navbar navbar-expand-md w-100 mt-auto bg-black bg-opacity-25" style={{ backdropFilter: "blur(5px)" }}>
+				<nav className="navbar navbar-expand-md w-100 mt-auto bg-dark">
 					<div className="container-fluid">
 						<Link to="/" className="navbar-brand text-white"><i className="fa-solid fa-van-shuttle fa-lg"></i></Link>
 

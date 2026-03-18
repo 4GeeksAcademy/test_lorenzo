@@ -13,12 +13,16 @@ export const All_vans = () => {
 
     return (
         <>
-            <div className="overflow-auto">
-                {store.vans && store.vans.map((van) => {
-                    return (
-                        <VanCard van={van} key={van.car_id} />
-                    )
-                })}
+            <div className="bg-topo min-vh-100 py-5">
+                <div className="container">
+                    <div className="row mt-3 g-4">
+                        {store.vans && store.vans.map((van) => (
+                            <div className="col-12 col-md-6" key={van.car_id}>
+                                <VanCard van={van} />
+                            </div>
+                        ))}
+                    </div>
+                </div>
             </div>
         </>
     )
