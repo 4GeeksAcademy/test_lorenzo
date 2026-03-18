@@ -25,3 +25,16 @@ export const addBooking = async (bookingData, dispatch) => {
   const data = await response.json();
   dispatch({ type: "add_booking", payload: data });
 };
+export const getUserBookings = async (userId, dispatch) => {
+  const token = localStorage.getItem("token");
+
+  const response = await fetch(`${API_URL}/booking/user/${userId}`, {
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+  });
+
+  const data = await response.json();
+  dispatch({ type: "set_bookings", payload: data });
+};

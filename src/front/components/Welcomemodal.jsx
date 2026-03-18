@@ -21,15 +21,15 @@ export const WelcomeModal = ({
 
     useEffect(() => {
         if (show) {
-            setUsername("");
-            setName("");
-            setLastName("");
-            setPhone("");
-            setAddress("");
+            setUsername(store.user?.user_name || "");
+            setName(store.user?.name || "");
+            setLastName(store.user?.last_name || "");
+            setPhone(store.user?.phone || "");
+            setAddress(store.user?.address || "");
             setError("");
             setSaving(false);
         }
-    }, [show]);
+    }, [show, store.user]);
     if (!show) return null;
 
     const handleSave = async () => {
@@ -59,7 +59,9 @@ export const WelcomeModal = ({
         
     }
     const handleClose = () => {
-        dispatch({ type: "auth_logout" })
+        if (!store.user?.user_name) {
+            dispatch({ type: "auth_logout" });
+        }
         onClose();
     };
 
@@ -67,13 +69,12 @@ export const WelcomeModal = ({
     <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} tabIndex="-1">
         <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content text-dark">
-                <div className="modal-header bg-primary text-white">
-                    <h5 className="modal-title">¡Bienvenido! Completa tu perfil</h5>
+                <div className="modal-header bg-success text-white">
+                    <h5 className="modal-title">{store.user?.user_name ? "Editar tu perfil" : "¡Bienvenido! Completa tu perfil"}</h5>
                 </div>
                 <div className="modal-body">
                     {error && <div className="alert alert-danger py-2 small">{error}</div>}
                     <form>
-                        {/* user_name es obligatorio según tu lógica */}
                         <div className="mb-2">
                             <label className="form-label small fw-bold">Nombre de usuario *</label>
                             <input 
@@ -117,17 +118,17 @@ export const WelcomeModal = ({
                 </div>
                 <div className="modal-footer">
                     <button type="button" className="btn btn-sm btn-outline-secondary" onClick={handleClose}>
-                        Cerrar sesión
+                        {store.user?.user_name ? "Cancelar" : "Cerrar sesión"}
                     </button>
                     <button 
                         type="button" 
-                        className="btn btn-sm btn-primary" 
+                        className="btn btn-sm btn-success" 
                         onClick={handleSave}
                         disabled={saving}
                     >
                         {saving ? (
                             <span className="spinner-border spinner-border-sm me-1"></span>
-                        ) : "Guardar y entrar"}
+                        ) :(store.user?.user_name ? "Guardar cambios" : "Guardar y entrar")}
                     </button>
                 </div>
             </div>
