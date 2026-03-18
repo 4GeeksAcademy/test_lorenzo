@@ -70,6 +70,12 @@ export default function storeReducer(store, action = {}) {
         fav_spots: action.payload,
       };
 
+    case "cancel_booking":
+  return {
+    ...store,
+    booking: store.booking.filter(b => b.booking_id !== action.payload)
+  }
+
     default:
       throw Error("Unknown action.");
   }

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import useGlobalReducer from "../hooks/useGlobalReducer"
 import { WelcomeModal } from "../components/Welcomemodal";
-import { getUserBookings } from "../services/bookingServices"
+import { getUserBookings, cancelBooking } from "../services/bookingServices"
 
 
 
@@ -9,13 +9,24 @@ export const UserPage = () => {
 
     const { store, dispatch } = useGlobalReducer();
     const [showEditModal, setShowEditModal] = useState(false)
+    const [bookingToCancel, setBookingToCancel] = useState(null)
+    const [cancelling, setCancelling] = useState(false)
+
     const favSpots = store.user?.fav_spots || [];
     const reservas = store.booking || [];
 
     useEffect(() => {
         if (!store.user?.id) return
-        getUserBookings(store.user.id, dispatch) 
+        getUserBookings(store.user.id, dispatch)
     }, [store.user?.id])
+
+    const handleConfirmCancel = async () => {
+        if (!bookingToCancel) return;
+        const idToCancel = bookingToCancel;
+        setBookingToCancel(null);
+        setCancelling(false);
+        await cancelBooking(idToCancel, dispatch)
+    }
 
 
 
@@ -34,7 +45,6 @@ export const UserPage = () => {
                 <div className="card-body p-4 p-md-5 bg-white">
                     <div className="row align-items-center">
                         <div className="col-auto">
-                            {/* Avatar con inicial o imagen */}
                             <div className="bg-success text-white d-flex align-items-center justify-content-center rounded-circle shadow text-uppercase"
                                 style={{ width: "150px", height: "150px", fontSize: "3.5rem" }}>
                                 {store.user?.name?.[0] || <i className="fa-solid fa-user"></i>}
@@ -70,11 +80,6 @@ export const UserPage = () => {
                     </div>
                 </div>
             </div>
-
-
-
-
-
             <div className="container-fluid py-4">
                 <div className="row justify-content-center ">
                     <div className="col-12 col-xl-9">
@@ -109,12 +114,20 @@ export const UserPage = () => {
                                                     </p>
                                                     <div className="d-flex justify-content-between align-items-center">
                                                         <span className={`badge rounded-pill border ${res.status === "confirmed" ? "bg-success-subtle text-success border-success-subtle" :
-                                                                res.status === "cancelled" ? "bg-danger-subtle text-danger border-danger-subtle" :
-                                                                    "bg-warning-subtle text-warning border-warning-subtle"
+                                                            res.status === "cancelled" ? "bg-danger-subtle text-danger border-danger-subtle" :
+                                                                "bg-warning-subtle text-warning border-warning-subtle"
                                                             }`}>
                                                             {res.status}
                                                         </span>
-                                                        <button className="btn btn-sm btn-outline-primary rounded-pill">Detalles</button>
+                                                        {res.status !== "cancelled" && (
+                                                            <button
+                                                                className="btn btn-sm btn-outline-danger rounded-pill"
+                                                                onClick={() => setBookingToCancel(res.booking_id)}
+                                                            >
+                                                                <i className="fa-solid fa-xmark me-1"></i>
+                                                                Cancelar
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
@@ -173,6 +186,45 @@ export const UserPage = () => {
                     </div>
                 </div>
             </div>
+            {bookingToCancel && (
+                <div className="modal show d-block" style={{ backgroundColor: "rgba(0,0,0,0.5)", zIndex: 9999 }}>
+                    <div className="modal-dialog modal-dialog-centered">
+                        <div className="modal-content border-0 shadow" style={{ borderRadius: "15px" }}>
+                            <div className="modal-header border-0 pb-0">
+                                <h5 className="modal-title fw-bold">
+                                    <i className="fa-solid fa-triangle-exclamation text-warning me-2"></i>
+                                    Cancelar reserva
+                                </h5>
+                            </div>
+                            <div className="modal-body">
+                                <p className="text-muted mb-0">
+                                    ¿Estás seguro de que quieres cancelar esta reserva? Esta acción no se puede deshacer.
+                                </p>
+                            </div>
+                            <div className="modal-footer border-0 pt-0 gap-2">
+                                <button
+                                    className="btn btn-outline-secondary rounded-pill px-4"
+                                    onClick={() => setBookingToCancel(null)}
+                                    disabled={cancelling}
+                                >
+                                    Volver
+                                </button>
+                                <button
+                                    className="btn btn-danger rounded-pill px-4"
+                                    onClick={handleConfirmCancel}
+                                    disabled={cancelling}
+                                >
+                                    {cancelling
+                                        ? <><i className="fa-solid fa-spinner fa-spin me-2"></i>Cancelando...</>
+                                        : <><i className="fa-solid fa-xmark me-2"></i>Sí, cancelar</>
+                                    }
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <WelcomeModal
                 show={showEditModal}
                 onClose={() => setShowEditModal(false)}
