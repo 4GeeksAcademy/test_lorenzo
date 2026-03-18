@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { SearchBox } from '@mapbox/search-js-react';
 import { SearchBoxCore } from '@mapbox/search-js-core';
@@ -9,7 +9,6 @@ import { SpotDetailModal } from '../components/Map-components/SpotDetailModal';
 
 import '../../front/index.css';
 import 'mapbox-gl/dist/mapbox-gl.css';
-
 const MAPBOX_ACCESS_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN;
 
 export const Map = () => {
@@ -36,9 +35,17 @@ export const Map = () => {
     community: false
   });
 
+  const handleOpenDetail = useCallback((id) => {
+    console.log("Abriendo detalle para:", id);
+    setInfoModalSpotId(id);
+  }, []);
+
   const loadSpots = async () => {
     const data = await getAllSpots();
-    if (data) setStores(data);
+    if (data) {
+      console.log("Datos recibidos de la DB:", data);
+      setStores(data);
+    }
   };
 
   useEffect(() => {
@@ -51,7 +58,7 @@ export const Map = () => {
       const matchSleep = !filters.sleep || item.is_sleepable === true;
       const matchWaste = !filters.waste || item.has_waste_dump === true;
       const matchElectric = !filters.electricity || item.has_electricity === true;
-      const matchCommunity = !filters.community || (item.user_id !== undefined);
+      const matchCommunity = !filters.community || (item.id !== undefined || item.spot_id !== undefined);
       const matchesCategory = !searchCategory || item.category === searchCategory;
 
       return matchWater && matchSleep && matchWaste && matchElectric && matchCommunity && matchesCategory;
@@ -71,14 +78,14 @@ export const Map = () => {
       );
     }).map(spot => ({
       ...spot,
-      id: `db-${spot.spot_id}`,
+      id: `db-${spot.spot_id || spot.id}`,
       isCustom: true
     }));
 
     const mapboxSpots = filters.community ? [] : searchResults
       .filter(feature => {
         const yaExisteEnComunidad = visibleDbSpots.some(
-          dbSpot => dbSpot.name.toLowerCase() === feature.properties.name.toLowerCase()
+          dbSpot => dbSpot.name?.toLowerCase() === feature.properties.name?.toLowerCase()
         );
         return !yaExisteEnComunidad;
       })
@@ -97,8 +104,11 @@ export const Map = () => {
 
   const selectedSpotData = useMemo(() => {
     if (!infoModalSpotId) return null;
+    if (String(infoModalSpotId).startsWith('new-')) {
+      return selectedStore;
+    }
     return unifiedListForSidebar.find(s => s.id === infoModalSpotId);
-  }, [infoModalSpotId, unifiedListForSidebar]);
+  }, [infoModalSpotId, unifiedListForSidebar, selectedStore]);
 
   useEffect(() => {
     if (mapRef.current) return;
@@ -112,14 +122,12 @@ export const Map = () => {
         zoom: 13
       });
 
-
-      const geolocate = new mapboxgl.GeolocateControl({
+      mapRef.current.addControl(new mapboxgl.GeolocateControl({
         positionOptions: { enableHighAccuracy: true },
         trackUserLocation: true,
-        showUserHeading: true,
-        showAccuracyCircle: true
-      });
-      mapRef.current.addControl(geolocate, 'top-right');
+        showUserHeading: true
+      }), 'top-right');
+
       mapRef.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
       mapRef.current.on('load', () => {
@@ -136,19 +144,64 @@ export const Map = () => {
 
     return () => {
       clearTimeout(timer);
-      if (mapRef.current) mapRef.current.remove();
     };
-  }, []);
+  }, []); 
 
   useEffect(() => {
-    if (selectedStore && mapRef.current) {
-      const longitude = selectedStore.longitude || selectedStore.geometry?.coordinates[0];
-      const latitude = selectedStore.latitude || selectedStore.geometry?.coordinates[1];
-      if (longitude && latitude) {
-        mapRef.current.flyTo({ center: [longitude, latitude], zoom: 14, essential: true });
-      }
+  if (!mapRef.current) return;
+
+  const updateSearchButton = () => {
+    if (searchCategory && searchCategory !== "water_waste") {
+      setShowSearchAreaButton(true);
     }
-  }, [selectedStore]);
+  };
+
+  mapRef.current.on('moveend', updateSearchButton);
+
+  return () => {
+    if (mapRef.current) mapRef.current.off('moveend', updateSearchButton);
+  };
+}, [searchCategory]); 
+
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    const handleMapClick = (e) => {
+      const target = e.originalEvent.target;
+
+      if (target.closest('.mapboxgl-marker') || target.closest('.mapboxgl-popup')) {
+        console.log("Clic ignorado por estar sobre UI existente.");
+        return;
+      }
+
+      const features = mapRef.current.queryRenderedFeatures(e.point);
+      if (features.some(f => f.layer?.type === 'symbol')) return;
+
+      const { lng, lat } = e.lngLat;
+      const newId = `new-${Date.now()}`;
+
+      const newSpotData = {
+        id: newId,
+        spot_id: newId,
+        name: "",
+        address: "Punto seleccionado en el mapa",
+        longitude: lng,
+        latitude: lat,
+        isCustom: false,
+        category: searchCategory || "parking",
+      };
+
+      setSelectedStore(newSpotData);
+
+      handleOpenDetail(newId);
+    };
+
+    mapRef.current.on('click', handleMapClick);
+
+    return () => {
+      if (mapRef.current) mapRef.current.off('click', handleMapClick);
+    };
+  }, [isMapReady, searchCategory, handleOpenDetail]);
 
   const performCategorySearch = async () => {
     if (!searchCategory || !mapBounds || !searchRef.current) return;
@@ -170,13 +223,6 @@ export const Map = () => {
 
   useEffect(() => { if (searchCategory) performCategorySearch(); }, [searchCategory, filters.community]);
 
-  useEffect(() => {
-    if (searchCategory && searchBounds) {
-      const boundsChanged = JSON.stringify(mapBounds) !== JSON.stringify(searchBounds);
-      setShowSearchAreaButton(boundsChanged);
-    }
-  }, [mapBounds, searchCategory, searchBounds]);
-
   const categoryButtons = [
     { label: "🏕️ Áreas y Campings", value: "campground" },
     { label: "🅿️ Parking", value: "parking" },
@@ -189,20 +235,28 @@ export const Map = () => {
     <div className="map-main-container">
       <div className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
         <Sidebar
-          key={`sidebar-${unifiedListForSidebar.length}`}
           stores={unifiedListForSidebar}
           setSelectedStore={(store) => {
             setSelectedStore(store);
-            setIsSidebarOpen(false);
+            if (mapRef.current && store.longitude && store.latitude) {
+              mapRef.current.flyTo({
+                center: [store.longitude, store.latitude],
+                zoom: 15,
+                essential: true
+              });
+            }
           }}
-          onOpenDetail={setInfoModalSpotId}
+          onOpenDetail={handleOpenDetail}
         />
       </div>
 
       <div className="map-wrapper" onClick={() => { if (isSidebarOpen) setIsSidebarOpen(false) }}>
         <div className="button-container">
           <button
-            onClick={(e) => { e.stopPropagation(); setFilters(prev => ({ ...prev, community: !prev.community })); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setFilters(prev => ({ ...prev, community: !prev.community }));
+            }}
             className={`category-button ${filters.community ? 'active community-active' : ''}`}
             style={{ backgroundColor: filters.community ? '#00473C' : '#fff', color: filters.community ? '#fff' : '#000', fontWeight: 'bold' }}
           >
@@ -250,26 +304,24 @@ export const Map = () => {
 
         <div ref={mapContainerRef} id="map-container" />
 
-        {/* Marcadores DB */}
         {isMapReady && filteredStores.map((store) => (
           <Marker
-            key={`db-${store.spot_id}`}
+            key={`db-${store.spot_id || store.id}`}
             map={mapRef.current}
             store={store}
-            onOpenDetail={setInfoModalSpotId}
+            onOpenDetail={handleOpenDetail}
           />
         ))}
 
-        {/* Marcadores Mapbox  */}
         {isMapReady && !filters.community && searchResults
-          .filter(mapboxItem => !stores.some(dbSpot => dbSpot.name.toLowerCase() === mapboxItem.properties.name.toLowerCase()))
+          .filter(mapboxItem => !stores.some(dbSpot => dbSpot.name?.toLowerCase() === mapboxItem.properties.name?.toLowerCase()))
           .map((feature, index) => {
             const featureId = feature.id || `ext-${index}`;
             return (
               <Marker
                 key={`ext-${featureId}`}
                 map={mapRef.current}
-                onOpenDetail={setInfoModalSpotId}
+                onOpenDetail={handleOpenDetail}
                 store={{
                   spot_id: featureId,
                   id: featureId,
@@ -291,7 +343,7 @@ export const Map = () => {
             onClose={() => setInfoModalSpotId(null)}
             onSuccess={loadSpots}
             allSpots={stores}
-            onOpenDetail={setInfoModalSpotId}
+            onOpenDetail={handleOpenDetail}
           />
         )}
       </div>

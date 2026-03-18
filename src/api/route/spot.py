@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, url_for, Blueprint
-from api.models import db, User, Post_spot, Media_spot, Coment 
+from api.models import db, User, Post_spot, Media_spot, Coment
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
 from sqlalchemy import select
@@ -159,12 +159,12 @@ def delete_spot(spot_id):
 def add_media_to_spot(spot_id):
     data = request.get_json()
     
-    spot = Post_spot.query.get(spot_id)
-    if spot is None:
+    spot_obj = Post_spot.query.get(spot_id)
+    if spot_obj is None:
         return jsonify({"msg": "Ese spot no existe"}), 404
         
-    if "url" not in data:
-        return jsonify({"msg": "Tienes que poner una URL para la foto"}), 400
+    if not data or "url" not in data:
+        return jsonify({"msg": "Falta la URL de la imagen"}), 400
         
     new_media = Media_spot(
         post_id=spot_id,        
@@ -195,3 +195,5 @@ def delete_media(media_id):
     db.session.commit()
     
     return jsonify({"msg": "Foto eliminada correctamente"}), 200
+
+
