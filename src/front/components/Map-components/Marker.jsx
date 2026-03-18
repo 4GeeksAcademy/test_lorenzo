@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import mapboxgl from "mapbox-gl";
 
+
 const MarkerIcon = ({ color = "#00473C" }) => (
     <svg width="32" height="40" viewBox="0 0 640 640" xmlns="http://www.w3.org/2000/svg">
         <path
@@ -17,40 +18,49 @@ export const Marker = ({ map, store, onOpenDetail }) => {
     const popupElement = useRef(document.createElement("div"));
 
     useEffect(() => {
-    if (!map || !store) return;
+        if (!map || !store) return;
 
-    const el = markerElement.current;
+        const el = markerElement.current;
 
-    const popup = new mapboxgl.Popup({
-        offset: 40,
-        closeButton: true,
-        closeOnClick: true,
-    }).setDOMContent(popupElement.current);
+        const popup = new mapboxgl.Popup({
+            offset: 40,
+            closeButton: true,
+            closeOnClick: true,
+        }).setDOMContent(popupElement.current);
 
-    markerRef.current = new mapboxgl.Marker(el, { anchor: "bottom" })
-        .setLngLat([store.longitude, store.latitude])
-        .setPopup(popup)
-        .addTo(map);
+        markerRef.current = new mapboxgl.Marker(el, { anchor: "bottom" })
+            .setLngLat([store.longitude, store.latitude])
+            .setPopup(popup)
+            .addTo(map);
 
-    if (String(store.spot_id).startsWith('new-')) {
-        popup.addTo(map);
-    }
-
-    return () => {
-        if (markerRef.current) {
-            markerRef.current.remove();
+        if (String(store.spot_id).startsWith('new-')) {
+            popup.addTo(map);
         }
-    };
-}, [map, store]);
+
+        return () => {
+            if (markerRef.current) {
+                markerRef.current.remove();
+            }
+        };
+    }, [map, store]);
 
     let emoji = "📍";
+    let markerColor = "#00473C";
+
     if (store.category === "campground") emoji = "🏕️";
     if (store.category === "parking") emoji = "🅿️";
     if (store.category === "water_waste") emoji = "💧";
     if (store.category === "gas_station") emoji = "⛽";
     if (store.category === "supermarket") emoji = "🛒";
 
+
+    if (store.category === "search_pin") {
+        emoji = "🔍";
+        markerColor = "#db5a23";
+    }
+
     const renderStars = (rating) => {
+        if (store.category === "search_pin") return null;
         if (!rating && rating !== 0) return <span style={{ color: '#888', fontSize: '11px' }}>Sin reseñas</span>;
         const rounded = Math.round(rating);
         return (
@@ -72,25 +82,26 @@ export const Marker = ({ map, store, onOpenDetail }) => {
 
                     {renderStars(store.rating)}
 
-                    {/* Añadimos la clase 'btn-ver-detalle' para que el listener nativo lo encuentre */}
                     <button
                         type="button"
                         onClick={(e) => {
-                            // MUY IMPORTANTE: Estos dos bloquean al mapa pero activan la función
                             e.preventDefault();
                             e.stopPropagation();
 
                             const rawId = store.spot_id || store.id;
-                            let finalId = String(rawId);
-                            if (!finalId.includes('-')) finalId = `db-${finalId}`;
 
-                            console.log("Ejecutando onOpenDetail para:", finalId);
-                            onOpenDetail(finalId);
+                            if (store.category === "search_pin" && !store.name.includes("Ya guardado")) {
+                                onOpenDetail(`new-search-${Date.now()}`);
+                            } else {
+                                let finalId = String(rawId);
+                                if (!finalId.includes('-')) finalId = `db-${finalId}`;
+                                onOpenDetail(finalId);
+                            }
                         }}
                         style={{
                             width: '100%',
-                            backgroundColor: '#00473C',
-                            color: 'white',
+                            backgroundColor: markerColor,
+                            color: "white",
                             border: 'none',
                             padding: '10px',
                             borderRadius: '6px',
@@ -99,7 +110,10 @@ export const Marker = ({ map, store, onOpenDetail }) => {
                             marginTop: '8px'
                         }}
                     >
-                        Ver detalles
+                        {store.category === "search_pin"
+                            ? (store.name.includes("Ya guardado") ? "Ver sitio en comunidad" : "Crear sitio aquí")
+                            : "Ver detalles"
+                        }
                     </button>
                 </div>,
                 popupElement.current
@@ -107,7 +121,8 @@ export const Marker = ({ map, store, onOpenDetail }) => {
 
             {createPortal(
                 <div style={{ position: 'relative', cursor: 'pointer' }}>
-                    <MarkerIcon />
+
+                    <MarkerIcon color={markerColor} />
                     <div style={{
                         position: 'absolute',
                         top: '6px',
