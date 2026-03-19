@@ -153,25 +153,25 @@ class Post_spot(db.Model):
         avg_rating = sum(ratings) / len(ratings) if ratings else 0
 
         return {
-        "spot_id": self.spot_id,
-        "user_id": self.user_id,
-        "name": self.name,
-        "user_name": self.user_post.user_name if self.user_post else "Usuario anónimo",
-        "category": self.category,
-        "description": self.description,
-        "address": self.address,
-        "city": self.city,
-        "phone_formatted": self.phone_formatted,
-        "longitude": float(self.longitude) if self.longitude is not None else 0.0,
-        "latitude": float(self.latitude) if self.latitude is not None else 0.0,
-        "rating": float(self.rating) if self.rating is not None else 0.0,
-        "is_sleepable": self.is_sleepable,
-        "has_water": self.has_water,
-        "has_waste_dump": self.has_waste_dump,
-        "has_electricity": self.has_electricity,
-        "rating": round(avg_rating, 1),
-        "media": [item.serialize() for item in self.spot_media]
-    }
+            "spot_id": self.spot_id,
+            "user_id": self.user_id,
+            "name": self.name,
+            "user_name": self.user_post.user_name if self.user_post else "Usuario anónimo",
+            "category": self.category,
+            "description": self.description,
+            "address": self.address,
+            "city": self.city,
+            "phone_formatted": self.phone_formatted,
+            "longitude": float(self.longitude) if self.longitude is not None else 0.0,
+            "latitude": float(self.latitude) if self.latitude is not None else 0.0,
+            "rating": float(self.rating) if self.rating is not None else 0.0,
+            "is_sleepable": self.is_sleepable,
+            "has_water": self.has_water,
+            "has_waste_dump": self.has_waste_dump,
+            "has_electricity": self.has_electricity,
+            "rating": round(avg_rating, 1),
+            "media": [item.serialize() for item in self.spot_media]
+        }
 
 
 class Media_spot(db.Model):
@@ -200,7 +200,7 @@ class Booking(db.Model):
     start_date: Mapped[date] = mapped_column(db.Date, nullable=False)
     end_date: Mapped[date] = mapped_column(db.Date, nullable=False)
     status: Mapped[str] = mapped_column(
-        String(50), default="pending")  # pending, confirmed, cancelled
+        String(50), default="pending")
     total_price: Mapped[Decimal] = mapped_column(
         Numeric(10, 2), nullable=False)
 
@@ -214,11 +214,9 @@ class Booking(db.Model):
             "booking_id": self.booking_id,
             "user_id": self.user_id,
             "car_id": self.car_id,
-            # isoformat lo convierte en "AAAA-MM-DD"
-            "start_date": self.start_date.isoformat(),
-            "end_date": self.end_date.isoformat(),
+            "start_date": self.start_date.strftime('%d/%m/%Y'),
+            "end_date": self.end_date.strftime('%d/%m/%Y'),
             "status": self.status,
-            # aqui se pasa a float para que el JSON lo acepte
             "total_price": float(self.total_price)
         }
 
