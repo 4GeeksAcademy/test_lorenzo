@@ -9,7 +9,6 @@ export const OffcanvasUser = ({ id }) => {
 
     useEffect(() => {
         const loadFavorites = async () => {
-            // Solo pedimos favoritos si hay un token (usuario logueado)
             if (localStorage.getItem("token")) {
                 const favs = await getUserFavorites();
                 dispatch({
@@ -49,7 +48,7 @@ export const OffcanvasUser = ({ id }) => {
 
                     <ul className="list-group list-group-flush mb-4">
                         <li className="list-group-item border-0 px-0">
-                            <i className="fa-solid fa-heart me-2 text-danger"></i>
+                            <i className="fa-solid fa-heart me-2 text-success"></i>
                             Favoritos ({store.fav_spots ? store.fav_spots.length : 0})
                         </li>
                         <li className="list-group-item border-0 px-0">
