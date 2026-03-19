@@ -102,10 +102,10 @@ export const Navbar = () => {
 							) : (
 								<div className="d-flex gap-2">
 									<Link to="/signup">
-										<button className="btn btn-success px-5 py-2 fw-bold rounded-pill">Signup</button>
+										<button className="btn btn-success px-5 py-2 fw-bold rounded-pill">Registrate</button>
 									</Link>
 									<Link to="/login">
-										<button className="btn btn-success px-5 py-2 fw-bold rounded-pill">Login</button>
+										<button className="btn btn-success px-5 py-2 fw-bold rounded-pill">Ingresar</button>
 									</Link>
 								</div>
 							)}

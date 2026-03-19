@@ -4,7 +4,7 @@ export const initialStore = () => {
     vans: [],
     booking: [],
     token: localStorage.getItem("token") || null,
-    user: [],
+    user: null,
     spot: [],
     fav_vans: [],
     fav_spots: [],
@@ -47,7 +47,7 @@ export default function storeReducer(store, action = {}) {
     case "add_booking":
       return {
         ...store,
-        booking: [...store.booking, action.payload],
+        booking: [...(store.booking || []), action.payload]
       };
 
     case "auth_login": {
@@ -77,6 +77,6 @@ export default function storeReducer(store, action = {}) {
   }
 
     default:
-      throw Error("Unknown action.");
+      return store;
   }
 }

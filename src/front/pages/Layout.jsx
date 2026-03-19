@@ -11,6 +11,8 @@ import { WelcomeModal } from "../components/Welcomemodal.jsx";
 export const Layout = () => {
     const {store, dispatch} =useGlobalReducer()
     const[isLoading, setIsLoading]= useState(true)
+    const [showWelcome, setShowWelcome] = useState(false)
+
     useEffect (()=> {
         const initialize =async()=> {
 
@@ -22,9 +24,16 @@ export const Layout = () => {
         initialize();
     },[dispatch])
 
-    const showModal = !isLoading && !!(store.user && !store.user.user_name);
+ useEffect(() => {
+    if (isLoading) return; // 👈 espera a que termine el loading
+    if (store.user && !store.user.user_name) {
+        setShowWelcome(true);
+    } else {
+        setShowWelcome(false);
+    }
+}, [store.user, isLoading])
 
-    if(isLoading){
+    if (isLoading) {
         return (
             <div 
                 className="d-flex flex-column justify-content-center align-items-center" 
@@ -42,12 +51,10 @@ export const Layout = () => {
         <ScrollToTop>
             <Navbar />
                 <Outlet />
-                {showModal && (
-                <WelcomeModal 
-                    show={showModal} 
-                    onClose={() => console.log("Modal de bienvenida gestionado")} 
-                />
-            )}
+                <WelcomeModal
+                show={showWelcome}
+                onClose={() => setShowWelcome(false)}
+            />
             <Footer />
         </ScrollToTop>
     )
