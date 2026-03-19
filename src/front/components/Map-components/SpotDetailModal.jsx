@@ -16,9 +16,9 @@ export const SpotDetailModal = ({ spotId, externalData, onClose, onSuccess, allS
     const [loading, setLoading] = useState(true);
     const [comments, setComments] = useState([]);
 
+    const isAuthenticated = !!localStorage.getItem("token");
     const currentUserId = localStorage.getItem("user_id") || store.user?.id;
 
-    // Estados para el Spot
     const [name, setName] = useState("");
     const [address, setAddress] = useState("");
     const [description, setDescription] = useState("");
@@ -32,7 +32,6 @@ export const SpotDetailModal = ({ spotId, externalData, onClose, onSuccess, allS
     const [hasLight, setHasLight] = useState(false);
     const [isSleepable, setIsSleepable] = useState(false);
 
-    // Estados para el Formulario (Nueva reseña o Edición)
     const [newComment, setNewComment] = useState("");
     const [newRating, setNewRating] = useState(5);
     const [errorMessage, setErrorMessage] = useState("");
@@ -40,8 +39,6 @@ export const SpotDetailModal = ({ spotId, externalData, onClose, onSuccess, allS
 
     const isExternal = typeof spotId === 'string' && !spotId.startsWith('db-');
     const isNewManualSpot = String(spotId).startsWith('new-');
-
-    // Lógica de fiabilidad: 3 o más reseñas
     const isTrustworthy = comments.length >= 3;
 
     const autoGrow = (e) => {
@@ -52,6 +49,7 @@ export const SpotDetailModal = ({ spotId, externalData, onClose, onSuccess, allS
     const loadDetail = async () => {
         if (!spotId) return;
         setLoading(true);
+        setImageUrl("");
         const cleanId = String(spotId).replace('db-', '');
 
         if (!isExternal) {
@@ -59,6 +57,7 @@ export const SpotDetailModal = ({ spotId, externalData, onClose, onSuccess, allS
                 getSpotById(cleanId),
                 getAllComments()
             ]);
+
             setSpot(spotData);
             setComments(allComments.filter(comment => Number(comment.spot_id) === Number(cleanId)));
 
@@ -72,20 +71,19 @@ export const SpotDetailModal = ({ spotId, externalData, onClose, onSuccess, allS
             setIsSleepable(spotData?.is_sleepable || false);
             setLat(spotData?.latitude);
             setLng(spotData?.longitude);
-            if (spotData?.media?.[0]?.url) setImageUrl(spotData.media[0].url);
         } else {
-            if (isNewManualSpot) {
-                setName("");
-                setAddress("");
-            } else {
-                setName(externalData?.name || "Sitio sin nombre");
-                setAddress(externalData?.address || "Dirección no disponible");
-            }
+            setName(isNewManualSpot ? "" : (externalData?.name || ""));
+            setAddress(externalData?.address || "");
             setCategory(externalData?.category || "parking");
             setLat(externalData?.latitude);
             setLng(externalData?.longitude);
             setDescription("");
-            setImageUrl("");
+            setHasWater(false);
+            setHasWaste(false);
+            setHasLight(false);
+            setIsSleepable(false);
+            setSpot(null);
+            setComments([]);
         }
         setLoading(false);
     };
@@ -94,26 +92,8 @@ export const SpotDetailModal = ({ spotId, externalData, onClose, onSuccess, allS
         loadDetail();
     }, [spotId, isExternal, externalData, isNewManualSpot]);
 
-    const startEditing = (comment) => {
-        setEditingId(comment.coment_id);
-        setNewComment(comment.coment_text);
-        setNewRating(comment.rating);
-        const modalBody = document.querySelector('.modal-body');
-        if (modalBody) modalBody.scrollTo({ top: 0, behavior: 'smooth' });
-    };
-
-    const handleDelete = async (id) => {
-        if (window.confirm("¿Seguro que quieres borrar esta reseña?")) {
-            const success = await deleteComment(id);
-            if (success) {
-                await loadDetail();
-            } else {
-                setErrorMessage("❌ No tienes permiso para borrar esto");
-            }
-        }
-    };
-
     const handleAction = async () => {
+        if (!isAuthenticated) return;
         setErrorMessage("");
         if (isNewManualSpot && !name.trim()) {
             setErrorMessage("⚠️ El nombre es obligatorio.");
@@ -154,9 +134,29 @@ export const SpotDetailModal = ({ spotId, externalData, onClose, onSuccess, allS
                     setNewComment("");
                     setNewRating(5);
                     setImageUrl("");
-                    await loadDetail();
+                    alert("¡Reseña publicada con éxito!");
                     if (onSuccess) await onSuccess();
+                    await loadDetail();
                 }
+            }
+        }
+    };
+
+    const startEditing = (comment) => {
+        setEditingId(comment.coment_id);
+        setNewComment(comment.coment_text);
+        setNewRating(comment.rating);
+        const modalBody = document.querySelector('.modal-body');
+        if (modalBody) modalBody.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const handleDelete = async (id) => {
+        if (window.confirm("¿Seguro que quieres borrar esta reseña?")) {
+            const success = await deleteComment(id);
+            if (success) {
+                await loadDetail();
+            } else {
+                setErrorMessage("❌ No tienes permiso para borrar esto");
             }
         }
     };
@@ -197,7 +197,14 @@ export const SpotDetailModal = ({ spotId, externalData, onClose, onSuccess, allS
                                         <button className="btn btn-dark btn-sm position-absolute top-50 end-0 translate-middle-y m-2 opacity-75 rounded-circle" style={{ width: '35px', height: '35px', zIndex: 10 }} onClick={() => changeImage(1)}>❯</button>
                                     </>
                                 )}
-                                <button className="btn-close position-absolute top-0 end-0 m-3 bg-white p-2 rounded-circle shadow-sm" style={{ zIndex: 11 }} onClick={onClose}></button>
+                                <button
+                                    className="btn-close position-absolute top-0 end-0 m-3 bg-white p-2 rounded-circle shadow-sm"
+                                    style={{ zIndex: 11 }}
+                                    onClick={() => {
+                                        setImageUrl("");
+                                        onClose();
+                                    }}
+                                ></button>
                             </div>
 
                             {spot?.media?.length > 0 && (
@@ -211,7 +218,11 @@ export const SpotDetailModal = ({ spotId, externalData, onClose, onSuccess, allS
                             <div className="modal-body p-4" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
                                 <div className="mb-3">
                                     {isNewManualSpot ? (
-                                        <select className="form-select form-select-sm border-0 bg-success bg-opacity-10 text-success fw-bold w-auto mb-2" value={category} onChange={e => setCategory(e.target.value)}>
+                                        <select
+                                            className="form-select form-select-sm border-0 bg-success bg-opacity-10 text-success fw-bold w-auto mb-2"
+                                            value={category}
+                                            onChange={e => setCategory(e.target.value)}
+                                        >
                                             <option value="campground">🏕️ Área y Camping</option>
                                             <option value="parking">🅿️ Parking</option>
                                             <option value="water_waste">💧 Vaciado y Agua</option>
@@ -219,20 +230,46 @@ export const SpotDetailModal = ({ spotId, externalData, onClose, onSuccess, allS
                                             <option value="supermarket">🛒 Supermercado</option>
                                         </select>
                                     ) : (
-                                        <div className="badge bg-success bg-opacity-10 text-success fw-bold p-2 mb-2 text-uppercase">{category.replace('_', ' ')}</div>
+                                        <div className="badge bg-success bg-opacity-10 text-success fw-bold p-2 mb-2 text-uppercase">
+                                            {category.replace('_', ' ')}
+                                        </div>
                                     )}
-                                    {isNewManualSpot ? <input className="form-control fw-bold h4 border-bottom mb-2 bg-transparent shadow-none" placeholder="Nombre del sitio..." value={name} onChange={e => setName(e.target.value)} autoFocus /> : <h4 className="fw-bold mb-1">{name}</h4>}
-                                    <p className="text-muted small mb-1">📍 {address}</p>
+
+                                    {isNewManualSpot ? (
+                                        <input
+                                            className="form-control fw-bold h4 border-bottom mb-2 bg-transparent shadow-none border-0 ps-0"
+                                            placeholder="Nombre del sitio..."
+                                            value={name}
+                                            onChange={e => setName(e.target.value)}
+                                            autoFocus
+                                        />
+                                    ) : (
+                                        <h4 className="fw-bold mb-1">{name}</h4>
+                                    )}
+
+                                    {isNewManualSpot ? (
+                                        <div className="input-group input-group-sm mb-1">
+                                            <span className="input-group-text bg-transparent border-0 ps-0">📍</span>
+                                            <input
+                                                className="form-control form-control-sm border-bottom bg-transparent shadow-none border-0"
+                                                placeholder="Escribe la dirección o ubicación..."
+                                                value={address}
+                                                onChange={e => setAddress(e.target.value)}
+                                            />
+                                        </div>
+                                    ) : (
+                                        <p className="text-muted small mb-1">📍 {address}</p>
+                                    )}
 
                                     {!isExternal && !isNewManualSpot && spot && (
                                         <div className="d-flex align-items-center gap-2 mt-2">
                                             <span className="badge bg-light text-dark border fw-normal" style={{ fontSize: '0.7rem' }}>
-                                                👤 Por: {spot.user_name || `Usuario ${spot.user_id}`}
+                                                👤 Añadido por: {spot.user_name || `Usuario ${spot.user_id}`}
                                             </span>
                                             {isTrustworthy ? (
                                                 <span className="badge bg-success shadow-sm" style={{ fontSize: '0.7rem' }}>✅ Sitio Confiable</span>
                                             ) : (
-                                                <span className="badge bg-light text-muted border fw-normal" style={{ fontSize: '0.7rem' }}>⏳ Verificando...</span>
+                                                <span className="badge bg-light text-muted border fw-normal" style={{ fontSize: '0.7rem' }}>⏳ Verificando sitio...</span>
                                             )}
                                         </div>
                                     )}
@@ -252,96 +289,127 @@ export const SpotDetailModal = ({ spotId, externalData, onClose, onSuccess, allS
                                 <h6 className="fw-bold small text-muted text-uppercase mb-2">Descripción</h6>
                                 {isNewManualSpot ? <textarea className="form-control bg-light mb-4 p-2 border-0" rows="2" value={description} onChange={e => { setDescription(e.target.value); autoGrow(e); }} placeholder="Describe el lugar..." /> : <div className="p-3 bg-light rounded mb-4 shadow-sm" style={{ whiteSpace: 'pre-wrap', fontSize: '0.9rem' }}>{description || "Sin descripción disponible."}</div>}
 
-                                <div className={`p-3 rounded border mb-4 shadow-sm ${editingId ? 'bg-warning bg-opacity-10' : 'bg-light'}`}>
-                                    <h6 className="fw-bold small mb-3 text-uppercase">{editingId ? '⚠️ Editando tu reseña' : 'Tu Opinión'}</h6>
-                                    <div className="d-flex gap-2">
-                                        <select className="form-select form-select-sm w-25 border-0 shadow-sm" value={newRating} onChange={e => setNewRating(parseInt(e.target.value))}>
-                                            {[5, 4, 3, 2, 1].map(n => <option key={n} value={n}>{n} ★</option>)}
-                                        </select>
-                                        <textarea className="form-control form-control-sm border-0 shadow-sm" rows="1" value={newComment} onChange={e => { setNewComment(e.target.value); autoGrow(e); }} placeholder="Escribe tu reseña..." />
-                                    </div>
-                                    {editingId && <button className="btn btn-link btn-sm text-danger mt-2 p-0 text-decoration-none" onClick={() => { setEditingId(null); setNewComment(""); setNewRating(5); }}>✖ Cancelar edición</button>}
-                                </div>
 
-                                {!isExternal && comments.length > 0 && (
+                                {isAuthenticated ? (
+                                    <div className={`p-3 rounded border mb-4 shadow-sm ${editingId ? 'bg-warning bg-opacity-10' : 'bg-light'}`}>
+                                        <h6 className="fw-bold small mb-3 text-uppercase">{editingId ? '⚠️ Editando tu reseña' : 'Tu Opinión'}</h6>
+                                        <div className="d-flex gap-2">
+                                            <select className="form-select form-select-sm w-25 border-0 shadow-sm" value={newRating} onChange={e => setNewRating(parseInt(e.target.value))}>
+                                                {[5, 4, 3, 2, 1].map(n => <option key={n} value={n}>{n} ★</option>)}
+                                            </select>
+                                            <textarea className="form-control form-control-sm border-0 shadow-sm" rows="1" value={newComment} onChange={e => { setNewComment(e.target.value); autoGrow(e); }} placeholder="Escribe tu reseña..." />
+                                        </div>
+                                        {editingId && <button className="btn btn-link btn-sm text-danger mt-2 p-0 text-decoration-none" onClick={() => { setEditingId(null); setNewComment(""); setNewRating(5); }}>✖ Cancelar edición</button>}
+                                    </div>
+                                ) : (
+                                    <div className="alert alert-info border-0 small text-center shadow-sm py-3 mb-4">
+                                        👋 ¡Hola! Inicia sesión para dejar tu valoración y fotos.
+                                    </div>
+                                )}
+
+
+                                {!isExternal && (
                                     <div className="mb-4">
                                         <h6 className="fw-bold small text-muted text-uppercase mb-3">Reseñas de la comunidad ({comments.length})</h6>
-                                        {comments.map(comment => {
-                                            const isOwner = String(comment.user_id) === String(currentUserId);
-                                            const isBeingEdited = editingId === comment.coment_id;
-                                            return (
-                                                <div key={comment.coment_id} className={`small p-3 rounded mb-2 border shadow-sm border-start border-3 ${isBeingEdited ? 'border-warning bg-light opacity-50' : 'border-success bg-white'}`} style={{ height: '80px', overflowY: 'auto' }}>
-                                                    <div className="d-flex justify-content-between align-items-center">
-                                                        <strong>{comment.user_name || `Usuario ${comment.user_id}`}</strong>
-                                                        <div className="d-flex gap-2 align-items-center">
-                                                            <span className="text-warning">{"★".repeat(comment.rating)}</span>
-                                                            {isOwner && !isBeingEdited && (
-                                                                <div className="d-flex gap-1 ms-2">
-                                                                    <button className="btn btn-sm p-0 border-0 opacity-75" onClick={() => startEditing(comment)}>✏️</button>
-                                                                    <button className="btn btn-sm p-0 border-0 opacity-75" onClick={() => handleDelete(comment.coment_id)}>🗑️</button>
+                                        {isAuthenticated ? (
+                                            comments.length > 0 ? (
+                                                comments.map(comment => {
+                                                    const isOwner = String(comment.user_id) === String(currentUserId);
+                                                    const isBeingEdited = editingId === comment.coment_id;
+                                                    return (
+                                                        <div key={comment.coment_id} className={`small p-3 rounded mb-2 border shadow-sm border-start border-3 ${isBeingEdited ? 'border-warning bg-light opacity-50' : 'border-success bg-white'}`} style={{ height: '80px', overflowY: 'auto' }}>
+                                                            <div className="d-flex justify-content-between align-items-center">
+                                                                <strong>{comment.user_name || `Usuario ${comment.user_id}`}</strong>
+                                                                <div className="d-flex gap-2 align-items-center">
+                                                                    <span className="text-warning">{"★".repeat(comment.rating)}</span>
+                                                                    {isOwner && !isBeingEdited && (
+                                                                        <div className="d-flex gap-1 ms-2">
+                                                                            <button className="btn btn-sm p-0 border-0 opacity-75" onClick={() => startEditing(comment)}>✏️</button>
+                                                                            <button className="btn btn-sm p-0 border-0 opacity-75" onClick={() => handleDelete(comment.coment_id)}>🗑️</button>
+                                                                        </div>
+                                                                    )}
                                                                 </div>
-                                                            )}
+                                                            </div>
+                                                            <div className="text-secondary mt-1">{isBeingEdited ? 'Modificando arriba...' : comment.coment_text}</div>
                                                         </div>
-                                                    </div>
-                                                    <div className="text-secondary mt-1">{isBeingEdited ? 'Modificando arriba...' : comment.coment_text}</div>
+                                                    );
+                                                })
+                                            ) : (
+                                                <p className="text-muted small text-center py-2">No hay reseñas todavía.</p>
+                                            )
+                                        ) : (
+                                            <div className="p-4 bg-light border rounded text-center shadow-sm">
+                                                <p className="text-muted small mb-3">🔒 Solo los usuarios registrados pueden ver las opiniones.</p>
+                                                <div className="d-flex gap-2 justify-content-center">
+                                                    <button onClick={() => window.location.href = "/login"} className="btn btn-success btn-sm fw-bold px-3">Entrar</button>
+                                                    <button onClick={() => window.location.href = "/signup"} className="btn btn-outline-success btn-sm fw-bold">Registrarme</button>
                                                 </div>
-                                            );
-                                        })}
+                                            </div>
+                                        )}
                                     </div>
                                 )}
 
-                                
                                 {!isExternal && !isNewManualSpot && (
-                                    <div className="mt-4 animate__animated animate__fadeIn">
+                                    <div className="mt-4">
                                         <label className="fw-bold small text-muted text-uppercase mb-1" style={{ fontSize: '0.7rem' }}>
-                                            📸 ¿Tienes una foto mejor de este spot? Compártela:
+                                            📸 ¿Tienes una foto de este spot?
                                         </label>
-                                        <div className="input-group shadow-sm">
-                                            <input
-                                                className="form-control form-control-sm border-0 bg-light"
-                                                value={imageUrl}
-                                                onChange={e => setImageUrl(e.target.value)}
-                                                placeholder="Pega el link de la imagen aquí..."
-                                            />
-                                            <button
-                                                className="btn btn-success btn-sm fw-bold px-3"
-                                                type="button"
-                                                onClick={async () => {
-                                                    if (!imageUrl.trim()) return alert("Por favor, pega un link primero");
+                                        {isAuthenticated ? (
+                                            <>
+                                                <div className="input-group shadow-sm">
+                                                    <input
+                                                        className="form-control form-control-sm border-0 bg-light"
+                                                        value={imageUrl}
+                                                        onChange={e => setImageUrl(e.target.value)}
+                                                        placeholder="Añade el link de la imagen..."
+                                                    />
+                                                    <button
+                                                        className="btn btn-success btn-sm fw-bold px-3"
+                                                        type="button"
+                                                        onClick={async () => {
+                                                            if (!imageUrl.trim()) return alert("Por favor, añade un link primero");
+                                                            const cleanId = String(spotId).replace('db-', '');
+                                                            const success = await addSpotMedia(cleanId, imageUrl);
+                                                            if (success) {
+                                                                setImageUrl("");
+                                                                await loadDetail();
+                                                                alert("¡Foto añadida!");
+                                                            }
+                                                        }}
+                                                    >
+                                                        Subir
+                                                    </button>
+                                                </div>
+                                                <p className="text-muted mt-2 mb-0" style={{ fontSize: '0.85rem' }}>
+                                                    * Las fotos ayudan a otros viajeros a conocer mejor el lugar antes de ir.
+                                                </p>
+                                            </>
 
-                                                    const cleanId = String(spotId).replace('db-', '');
-                                                    const success = await addSpotMedia(cleanId, imageUrl);
+                                        ) : (
 
-                                                    if (success) {
-                                                        setImageUrl("");
-                                                        await loadDetail(); 
-                                                        alert("¡Gracias por colaborar! Foto añadida.");
-                                                    } else {
-                                                        alert("Hubo un error al subir la imagen. Asegúrate de haber iniciado sesión.");
-                                                    }
-                                                }}
-                                            >
-                                                Subir
-                                            </button>
-                                        </div>
-                                        <p className="text-muted mt-1" style={{ fontSize: '0.75rem' }}>
-                                            * Las fotos ayudan a otros viajeros a encontrar el lugar.
-                                        </p>
-                                    </div>
-                                )}
-
-                                {isExternal && !isNewManualSpot && (
-                                    <div className="alert alert-light border-0 small text-center mt-3 shadow-sm" style={{ fontSize: '0.8rem', backgroundColor: '#fdfdfd' }}>
-                                        ✨ <span className="fw-bold text-success">¡Sé el primero en documentar este lugar!</span> <br />
-                                        Guarda el sitio en la comunidad para poder añadir fotos y reseñas.
+                                            <div className="p-2 bg-light rounded border text-center small text-muted">
+                                                Inicia sesión para compartir tus fotos.
+                                            </div>
+                                        )}
                                     </div>
                                 )}
 
                                 {errorMessage && <div className="alert alert-danger py-2 small fw-bold text-center mt-3 mb-0">{errorMessage}</div>}
 
-                                <button className="btn btn-success w-100 fw-bold py-2 shadow-sm mt-4" onClick={handleAction}>
-                                    {isExternal ? "➕ CONFIRMAR Y GUARDAR" : (editingId ? "💾 GUARDAR CAMBIOS" : "ENVIAR / ACTUALIZAR")}
-                                </button>
+                                <div className="mt-4">
+                                    {isAuthenticated ? (
+                                        <button className="btn btn-success w-100 fw-bold py-2 shadow-sm" onClick={handleAction}>
+                                            {isExternal ? "CONFIRMAR Y GUARDAR" : (editingId ? "GUARDAR CAMBIOS" : "ENVIAR / ACTUALIZAR")}
+                                        </button>
+                                    ) : (
+                                        <div className="p-3 bg-dark text-white rounded text-center shadow-sm">
+                                            <p className="small mb-2">Para guardar este sitio o colaborar, necesitas una cuenta.</p>
+                                            <button onClick={() => window.location.href = "/login"} className="btn btn-success btn-sm fw-bold w-100">
+                                                Identifícate ahora
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </>
                     )}

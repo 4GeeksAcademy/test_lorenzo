@@ -15,6 +15,7 @@ export const Map = () => {
   const mapRef = useRef(null);
   const mapContainerRef = useRef(null);
   const searchRef = useRef(null);
+  const [searchMarker, setSearchMarker] = useState(null);
 
   const [isMapReady, setIsMapReady] = useState(false);
   const [searchCategory, setSearchCategory] = useState("");
@@ -126,9 +127,9 @@ export const Map = () => {
         positionOptions: { enableHighAccuracy: true },
         trackUserLocation: true,
         showUserHeading: true
-      }), 'top-right');
+      }), 'bottom-right');
 
-      mapRef.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+      mapRef.current.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
 
       mapRef.current.on('load', () => {
         setIsMapReady(true);
@@ -145,23 +146,23 @@ export const Map = () => {
     return () => {
       clearTimeout(timer);
     };
-  }, []); 
+  }, []);
 
   useEffect(() => {
-  if (!mapRef.current) return;
+    if (!mapRef.current) return;
 
-  const updateSearchButton = () => {
-    if (searchCategory && searchCategory !== "water_waste") {
-      setShowSearchAreaButton(true);
-    }
-  };
+    const updateSearchButton = () => {
+      if (searchCategory && searchCategory !== "water_waste") {
+        setShowSearchAreaButton(true);
+      }
+    };
 
-  mapRef.current.on('moveend', updateSearchButton);
+    mapRef.current.on('moveend', updateSearchButton);
 
-  return () => {
-    if (mapRef.current) mapRef.current.off('moveend', updateSearchButton);
-  };
-}, [searchCategory]); 
+    return () => {
+      if (mapRef.current) mapRef.current.off('moveend', updateSearchButton);
+    };
+  }, [searchCategory]);
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -284,10 +285,23 @@ export const Map = () => {
               language="es"
               onRetrieve={(result) => {
                 if (result && result.features.length > 0) {
-                  const [longitude, latitude] = result.features[0].geometry.coordinates;
-                  mapRef.current.flyTo({ center: [longitude, latitude], zoom: 14, essential: true });
+                  const feature = result.features[0];
+                  const [longitude, latitude] = feature.geometry.coordinates;
+
+                  setSearchMarker({
+                    longitude,
+                    latitude,
+                    address: feature.properties.full_address || feature.properties.name || "Dirección buscada"
+                  });
+
+                  mapRef.current.flyTo({
+                    center: [longitude, latitude],
+                    zoom: 14,
+                    essential: true
+                  });
                 }
               }}
+              onClear={() => setSearchMarker(null)}
             />
           </div>
         </div>
@@ -335,6 +349,51 @@ export const Map = () => {
               />
             );
           })}
+
+        {isMapReady && searchMarker && (() => {
+          const duplicateSpot = stores.find(s => {
+            const distance = Math.sqrt(
+              Math.pow(s.longitude - searchMarker.longitude, 2) +
+              Math.pow(s.latitude - searchMarker.latitude, 2)
+            );
+            return distance < 0.0005;
+          });
+
+          return (
+            <Marker
+              key="search-location-marker"
+              map={mapRef.current}
+              onOpenDetail={() => {
+                if (duplicateSpot) {
+                  handleOpenDetail(`db-${duplicateSpot.spot_id || duplicateSpot.id}`);
+                } else {
+                  const newId = `new-search-${Date.now()}`;
+                  setSelectedStore({
+                    id: newId,
+                    name: "",
+                    address: searchMarker.address,
+                    longitude: searchMarker.longitude,
+                    latitude: searchMarker.latitude,
+                    category: searchCategory || "parking"
+                  });
+                  handleOpenDetail(newId);
+                }
+              }}
+              store={{
+                id: "search-marker",
+                longitude: searchMarker.longitude,
+                latitude: searchMarker.latitude,
+                category: "search_pin",
+                // 2. Cambiamos el nombre dinámicamente si es duplicado
+                name: duplicateSpot
+                  ? `📍 Ya guardado: ${duplicateSpot.name}`
+                  : "Nueva ubicación encontrada"
+              }}
+            />
+          );
+        })()}
+
+
 
         {infoModalSpotId && (
           <SpotDetailModal
