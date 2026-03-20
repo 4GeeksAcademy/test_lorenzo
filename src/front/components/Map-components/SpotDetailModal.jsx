@@ -7,7 +7,9 @@ import {
     createComment,
     updateComment,
     deleteComment,
-    addSpotMedia
+    addSpotMedia,
+    checkIfFavorite,
+    toggleFavorite
 } from '../../services/spotServices';
 
 export const SpotDetailModal = ({ spotId, externalData, onClose, onSuccess, allSpots, onOpenDetail }) => {
@@ -37,6 +39,8 @@ export const SpotDetailModal = ({ spotId, externalData, onClose, onSuccess, allS
     const [errorMessage, setErrorMessage] = useState("");
     const [editingId, setEditingId] = useState(null);
 
+    const [isFavorite, setIsFavorite] = useState(false);
+
     const isExternal = typeof spotId === 'string' && !spotId.startsWith('db-');
     const isNewManualSpot = String(spotId).startsWith('new-');
     const isTrustworthy = comments.length >= 3;
@@ -53,13 +57,15 @@ export const SpotDetailModal = ({ spotId, externalData, onClose, onSuccess, allS
         const cleanId = String(spotId).replace('db-', '');
 
         if (!isExternal) {
-            const [spotData, allComments] = await Promise.all([
+            const [spotData, allComments, favStatus] = await Promise.all([
                 getSpotById(cleanId),
-                getAllComments()
+                getAllComments(),
+                checkIfFavorite(cleanId)
             ]);
 
             setSpot(spotData);
             setComments(allComments.filter(comment => Number(comment.spot_id) === Number(cleanId)));
+            setIsFavorite(favStatus);
 
             setName(spotData?.name || "");
             setAddress(spotData?.address || "");
@@ -84,8 +90,14 @@ export const SpotDetailModal = ({ spotId, externalData, onClose, onSuccess, allS
             setIsSleepable(false);
             setSpot(null);
             setComments([]);
+            setIsFavorite(false);
         }
         setLoading(false);
+
+        if (!isExternal) {
+            const favStatus = await checkIfFavorite(cleanId);
+            setIsFavorite(favStatus);
+        }
     };
 
     useEffect(() => {
@@ -216,25 +228,49 @@ export const SpotDetailModal = ({ spotId, externalData, onClose, onSuccess, allS
                             )}
 
                             <div className="modal-body p-4" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-                                <div className="mb-3">
-                                    {isNewManualSpot ? (
-                                        <select
-                                            className="form-select form-select-sm border-0 bg-success bg-opacity-10 text-success fw-bold w-auto mb-2"
-                                            value={category}
-                                            onChange={e => setCategory(e.target.value)}
-                                        >
-                                            <option value="campground">🏕️ Área y Camping</option>
-                                            <option value="parking">🅿️ Parking</option>
-                                            <option value="water_waste">💧 Vaciado y Agua</option>
-                                            <option value="gas_station">⛽ Gasolinera</option>
-                                            <option value="supermarket">🛒 Supermercado</option>
-                                        </select>
-                                    ) : (
-                                        <div className="badge bg-success bg-opacity-10 text-success fw-bold p-2 mb-2 text-uppercase">
-                                            {category.replace('_', ' ')}
-                                        </div>
-                                    )}
+                                <div className="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        {isNewManualSpot ? (
+                                            <select
+                                                className="form-select form-select-sm border-0 bg-success bg-opacity-10 text-success fw-bold w-auto mb-2"
+                                                value={category}
+                                                onChange={e => setCategory(e.target.value)}
+                                            >
+                                                <option value="campground">🏕️ Área y Camping</option>
+                                                <option value="parking">🅿️ Parking</option>
+                                                <option value="water_waste">💧 Vaciado y Agua</option>
+                                                <option value="gas_station">⛽ Gasolinera</option>
+                                                <option value="supermarket">🛒 Supermercado</option>
+                                            </select>
+                                        ) : (
+                                            <div className="badge bg-success bg-opacity-10 text-success fw-bold p-2 mb-2 text-uppercase">
+                                                {category.replace('_', ' ')}
+                                            </div>
+                                        )}
+                                    </div>
 
+                                    {!isExternal && !isNewManualSpot && isAuthenticated && (
+                                        <button
+                                            className="btn border-0 p-0"
+                                            style={{ background: 'none', transition: 'transform 0.2s', lineHeight: '1' }}
+                                            onClick={async (e) => {
+                                                e.stopPropagation();
+                                                const cleanId = String(spotId).replace('db-', '');
+                                                const success = await toggleFavorite(cleanId, isFavorite);
+                                                if (success) setIsFavorite(!isFavorite);
+                                            }}
+                                            onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.8)'}
+                                            onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                                        >
+                                            <i className={`fa-heart fa-2x ${isFavorite ? 'fa-solid' : 'fa-regular'}`} style={{
+                                                transition: 'color 0.3s',
+                                                color: isFavorite ? '#198754' : '#198754'
+                                            }}></i>
+                                        </button>
+                                    )}
+                                </div>
+
+                                <div className="mb-3">
                                     {isNewManualSpot ? (
                                         <input
                                             className="form-control fw-bold h4 border-bottom mb-2 bg-transparent shadow-none border-0 ps-0"
@@ -246,6 +282,7 @@ export const SpotDetailModal = ({ spotId, externalData, onClose, onSuccess, allS
                                     ) : (
                                         <h4 className="fw-bold mb-1">{name}</h4>
                                     )}
+
 
                                     {isNewManualSpot ? (
                                         <div className="input-group input-group-sm mb-1">
@@ -260,20 +297,20 @@ export const SpotDetailModal = ({ spotId, externalData, onClose, onSuccess, allS
                                     ) : (
                                         <p className="text-muted small mb-1">📍 {address}</p>
                                     )}
-
-                                    {!isExternal && !isNewManualSpot && spot && (
-                                        <div className="d-flex align-items-center gap-2 mt-2">
-                                            <span className="badge bg-light text-dark border fw-normal" style={{ fontSize: '0.7rem' }}>
-                                                👤 Añadido por: {spot.user_name || `Usuario ${spot.user_id}`}
-                                            </span>
-                                            {isTrustworthy ? (
-                                                <span className="badge bg-success shadow-sm" style={{ fontSize: '0.7rem' }}>✅ Sitio Confiable</span>
-                                            ) : (
-                                                <span className="badge bg-light text-muted border fw-normal" style={{ fontSize: '0.7rem' }}>⏳ Verificando sitio...</span>
-                                            )}
-                                        </div>
-                                    )}
                                 </div>
+
+                                {!isExternal && !isNewManualSpot && spot && (
+                                    <div className="d-flex align-items-center gap-2 mt-2">
+                                        <span className="badge bg-light text-dark border fw-normal" style={{ fontSize: '0.7rem' }}>
+                                            👤 Añadido por: {spot.user_name || `Usuario ${spot.user_id}`}
+                                        </span>
+                                        {isTrustworthy ? (
+                                            <span className="badge bg-success shadow-sm" style={{ fontSize: '0.7rem' }}>✅ Sitio Confiable</span>
+                                        ) : (
+                                            <span className="badge bg-light text-muted border fw-normal" style={{ fontSize: '0.7rem' }}>⏳ Verificando sitio...</span>
+                                        )}
+                                    </div>
+                                )}
 
                                 <hr />
 
@@ -418,3 +455,4 @@ export const SpotDetailModal = ({ spotId, externalData, onClose, onSuccess, allS
         </div>
     );
 };
+
