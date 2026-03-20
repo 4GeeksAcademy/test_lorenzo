@@ -28,10 +28,7 @@ export const Navbar = () => {
 					<div className="container-fluid">
 						<Link to="/" className="navbar-brand text-white"><i className="fa-solid fa-van-shuttle fa-lg"></i></Link>
 
-				}}>
-				<div className="container-fluid">
-					<Link to="/" className="navbar-brand text-white"><i className="fa-solid fa-van-shuttle fa-lg"></i></Link>
-
+				</div>
 					<button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
 						<span className="navbar-toggler-icon"></span>
 					</button>
@@ -111,7 +108,7 @@ export const Navbar = () => {
 							)}
 						</div>
 					</div>
-				</div>
+
 			</nav>
 		</>
 	);
