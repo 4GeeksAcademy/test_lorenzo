@@ -44,6 +44,12 @@ export default function storeReducer(store, action = {}) {
         booking: action.payload,
       };
 
+    case "set_booking":
+      return {
+        ...store,
+        booking: action.payload
+      }
+
     case "add_booking":
       return {
         ...store,

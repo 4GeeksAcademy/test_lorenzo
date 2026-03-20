@@ -45,6 +45,8 @@ export const Login = () => {
             setLoading(false);
             return;
         }
+        
+        localStorage.setItem("user_id", response.user.id);
 
         localStorage.setItem("token", response.token);
         dispatch({ type: "auth_login", payload: { token: response.token } });

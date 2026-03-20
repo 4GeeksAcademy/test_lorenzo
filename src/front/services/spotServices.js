@@ -92,7 +92,7 @@ export const addSpotMedia = async (spotId, imageUrl) => {
     }
 };
 
-// --- SECCIÓN DE FETCH PARA COMENTARIOS  ---
+// --- Fetch para comentarios  ---
 
 export const getAllComments = async () => {
     try {
@@ -162,5 +162,57 @@ export const deleteComment = async (commentId) => {
     } catch (error) {
         console.error("Error al borrar:", error);
         return false;
+    }
+};
+
+export const toggleFavorite = async (spotId, isFav) => {
+    const token = localStorage.getItem("token");
+    const method = isFav ? "DELETE" : "POST";
+    try {
+        const response = await fetch(`${API_URL}/spot/favorites/${spotId}`, {
+            method: method,
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        return response.ok;
+    } catch (error) {
+        return false;
+    }
+};
+
+export const checkIfFavorite = async (spotId) => {
+    const token = localStorage.getItem("token");
+    if (!token) return false;
+    try {
+        const response = await fetch(`${API_URL}/spot/favorites/${spotId}/check`, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+        const data = await response.json();
+        return data.isFavorite;
+    } catch (error) {
+        return false;
+    }
+};
+
+export const getUserFavorites = async () => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+        console.log("No hay token, no pido favoritos");
+        return [];
+    }
+
+    const response = await fetch(`${API_URL}/spot/favorites`, {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + token  
+        }
+    });
+    if (response.ok) {
+        const data = await response.json();
+        return data;
+    } else {
+        console.log("Error al traer favoritos:", response.status);
+        return [];
     }
 };

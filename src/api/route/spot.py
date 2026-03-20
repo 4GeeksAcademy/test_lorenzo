@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify, url_for, Blueprint
-from api.models import db, User, Post_spot, Media_spot, Coment 
+from api.models import db, User, Post_spot, Media_spot, Coment
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
 from sqlalchemy import select
@@ -159,12 +159,12 @@ def delete_spot(spot_id):
 def add_media_to_spot(spot_id):
     data = request.get_json()
     
-    spot = Post_spot.query.get(spot_id)
-    if spot is None:
+    spot_obj = Post_spot.query.get(spot_id)
+    if spot_obj is None:
         return jsonify({"msg": "Ese spot no existe"}), 404
         
-    if "url" not in data:
-        return jsonify({"msg": "Tienes que poner una URL para la foto"}), 400
+    if not data or "url" not in data:
+        return jsonify({"msg": "Falta la URL de la imagen"}), 400
         
     new_media = Media_spot(
         post_id=spot_id,        
@@ -195,3 +195,50 @@ def delete_media(media_id):
     db.session.commit()
     
     return jsonify({"msg": "Foto eliminada correctamente"}), 200
+
+@spot.route("/favorites/<int:spot_id>", methods=["POST"])
+@jwt_required()
+def add_favorite(spot_id):
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+    spot_obj = Post_spot.query.get(spot_id)
+
+    if not spot_obj:
+        return jsonify({"msg": "Spot no encontrado"}), 404
+
+    if spot_obj not in user.fav_spot:
+        user.fav_spot.append(spot_obj)
+        db.session.commit()
+        return jsonify({"msg": "Añadido a favoritos"}), 200
+    
+    return jsonify({"msg": "Ya estaba en favoritos"}), 400
+
+@spot.route("/favorites/<int:spot_id>", methods=["DELETE"])
+@jwt_required()
+def remove_favorite(spot_id):
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+    spot_obj = Post_spot.query.get(spot_id)
+
+    if spot_obj in user.fav_spot:
+        user.fav_spot.remove(spot_obj)
+        db.session.commit()
+        return jsonify({"msg": "Eliminado de favoritos"}), 200
+    
+    return jsonify({"msg": "No estaba en favoritos"}), 400
+
+@spot.route("/favorites/<int:spot_id>/check", methods=["GET"])
+@jwt_required()
+def check_favorite(spot_id):
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+    is_fav = any(s.spot_id == spot_id for s in user.fav_spot)
+    return jsonify({"isFavorite": is_fav}), 200
+
+@spot.route("/favorites", methods=["GET"])
+@jwt_required()
+def get_user_favorites():
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+    favorites = [s.serialize() for s in user.fav_spot]
+    return jsonify(favorites), 200

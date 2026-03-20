@@ -17,6 +17,7 @@ from api.commands import setup_commands
 from flask_jwt_extended import JWTManager
 from datetime import timedelta
 from flask_cors import CORS
+from flask_mail import Mail
 
 # from models import Person
 
@@ -29,6 +30,16 @@ app.url_map.strict_slashes = False
 
 app.config["JWT_SECRET_KEY"] = os.getenv('JWT_SECRET_KEY') 
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=24) #para que el token dure 24 horas disponible
+
+app.config['MAIL_SERVER']='sandbox.smtp.mailtrap.io'
+app.config['MAIL_PORT'] = 2525
+app.config['MAIL_USERNAME'] = '4031c0dd788a11'
+app.config['MAIL_PASSWORD'] = '53ed6cef824690'
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USE_SSL'] = False
+
+mail= Mail(app)
+
 jwt = JWTManager(app)
 # database condiguration
 db_url = os.getenv("DATABASE_URL")
