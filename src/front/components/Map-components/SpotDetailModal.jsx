@@ -59,7 +59,7 @@ export const SpotDetailModal = ({ spotId, externalData, onClose, onSuccess, allS
         if (!isExternal) {
             const [spotData, allComments, favStatus] = await Promise.all([
                 getSpotById(cleanId),
-                getAllComments(),
+                getAllComments(cleanId),
                 checkIfFavorite(cleanId)
             ]);
 
