@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: f4e31d85e38e
+Revision ID: d3d30115fc65
 Revises: 
-Create Date: 2026-03-05 16:18:21.323928
+Create Date: 2026-03-20 13:05:27.108100
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'f4e31d85e38e'
+revision = 'd3d30115fc65'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -22,13 +22,15 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('email', sa.String(length=120), nullable=False),
     sa.Column('password_hash', sa.String(), nullable=False),
+    sa.Column('user_name', sa.String(length=120), nullable=True),
     sa.Column('name', sa.String(length=120), nullable=True),
     sa.Column('last_name', sa.String(length=120), nullable=True),
-    sa.Column('phone', sa.Integer(), nullable=True),
+    sa.Column('phone', sa.String(length=20), nullable=True),
     sa.Column('address', sa.String(length=120), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email'),
-    sa.UniqueConstraint('phone')
+    sa.UniqueConstraint('phone'),
+    sa.UniqueConstraint('user_name')
     )
     op.create_table('vehicle',
     sa.Column('car_id', sa.Integer(), nullable=False),
@@ -101,7 +103,7 @@ def upgrade():
     op.create_table('media_spot',
     sa.Column('media_id', sa.Integer(), nullable=False),
     sa.Column('post_id', sa.Integer(), nullable=False),
-    sa.Column('url', sa.String(length=255), nullable=False),
+    sa.Column('url', sa.Text(), nullable=False),
     sa.Column('media_type', sa.String(length=50), nullable=True),
     sa.ForeignKeyConstraint(['post_id'], ['post_spot.spot_id'], ),
     sa.PrimaryKeyConstraint('media_id')
