@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { useParams } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
 import useGlobalReducer from "../hooks/useGlobalReducer"
 import { getSingleVan } from "../services/vanServices"
 import DatePicker from "react-datepicker";
@@ -11,6 +11,7 @@ import { login } from "../services/loginServices";
 export const DetailsVan = () => {
 
     const { id } = useParams()
+    const navigate = useNavigate();
     const { store, dispatch } = useGlobalReducer()
     const [van, setVan] = useState()
     const [startDate, setStartDate] = useState(null);
@@ -58,6 +59,7 @@ export const DetailsVan = () => {
             setStartDate(null)
             setEndDate(null)
             getVan()
+            navigate("/user")
         }
     }
 
