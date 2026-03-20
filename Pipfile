@@ -23,6 +23,7 @@ flask-jwt-extended = "*"
 flask-cors = "*"
 mailtrap = "*"
 flask-mail = "*"
+tomli = "*"
 
 [requires]
 python_version = "3.10"
