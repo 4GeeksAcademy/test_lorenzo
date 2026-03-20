@@ -3,6 +3,7 @@ import useGlobalReducer from "../hooks/useGlobalReducer"
 import { WelcomeModal } from "../components/Welcomemodal";
 import { getUserBookings, cancelBooking } from "../services/bookingServices"
 import { Link } from "react-router-dom"
+import { loadUserFavorites } from "../services/spotServices"
 import "./UserPage.css"
 
 
@@ -13,13 +14,19 @@ export const UserPage = () => {
     const [bookingToCancel, setBookingToCancel] = useState(null)
     const [cancelling, setCancelling] = useState(false)
 
-    const favSpots = store.user?.fav_spots || [];
+    const favSpots = store.fav_spots || [];
     const reservas = store.booking || [];
 
     useEffect(() => {
         if (!store.user?.id) return
         getUserBookings(store.user.id, dispatch)
     }, [store.user?.id])
+
+    useEffect(() => {
+        if (!store.token) return;
+        loadUserFavorites(dispatch);
+    }, [store.token]);
+
 
     const handleConfirmCancel = async () => {
         if (!bookingToCancel) return;
@@ -115,8 +122,8 @@ export const UserPage = () => {
                                                     </p>
                                                     <div className="d-flex justify-content-between align-items-center">
                                                         <span className={`badge rounded-pill border ${res.status === "confirmed" ? "bg-success-subtle text-success border-success-subtle" :
-                                                                res.status === "cancelled" ? "bg-danger-subtle text-danger border-danger-subtle" :
-                                                                    "bg-warning-subtle text-warning border-warning-subtle"
+                                                            res.status === "cancelled" ? "bg-danger-subtle text-danger border-danger-subtle" :
+                                                                "bg-warning-subtle text-warning border-warning-subtle"
                                                             }`}>
                                                             {res.status}
                                                         </span>

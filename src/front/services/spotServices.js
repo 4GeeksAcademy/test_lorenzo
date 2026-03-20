@@ -216,3 +216,10 @@ export const getUserFavorites = async () => {
         return [];
     }
 };
+
+export const loadUserFavorites = async (dispatch) => {
+    const data = await getUserFavorites();
+    if (data && Array.isArray(data)) {
+        dispatch({ type: "set_fav_spots", payload: data });
+    }
+}
