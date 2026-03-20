@@ -17,7 +17,7 @@
 }
 
 .userpage-profile-card {
-    background: rgba(255, 255, 255, 0.97);
+    background: rgb(255, 255, 255);
     border-radius: 20px;
     padding: 2.5rem 2rem;
     width: 90%;

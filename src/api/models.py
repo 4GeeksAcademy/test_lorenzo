@@ -213,8 +213,11 @@ class Booking(db.Model):
             "booking_id": self.booking_id,
             "user_id": self.user_id,
             "car_id": self.car_id,
-            "start_date": self.start_date.strftime('%d/%m/%Y'),
-            "end_date": self.end_date.strftime('%d/%m/%Y'),
+            "van_brand": self.van_booking.brand,
+            "van_model": self.van_booking.model,
+            "van_img": self.van_booking.media[0].url_vehicle if self.van_booking.media else None,
+            "start_date": self.start_date.isoformat(),
+            "end_date": self.end_date.isoformat(),
             "status": self.status,
             "total_price": float(self.total_price)
         }

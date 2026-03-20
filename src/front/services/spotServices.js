@@ -94,13 +94,15 @@ export const addSpotMedia = async (spotId, imageUrl) => {
 
 // --- Fetch para comentarios  ---
 
-export const getAllComments = async () => {
+export const getAllComments = async (spotId = null) => {
     try {
-        const response = await fetch(`${API_URL}/coment/coment`);
+        const url = spotId 
+            ? `${API_URL}/coment/coment?spot_id=${spotId}`
+            : `${API_URL}/coment/coment`;
+        const response = await fetch(url);
         if (!response.ok) return [];
         return await response.json();
     } catch (error) {
-        console.error("Error al traer comentarios:", error);
         return [];
     }
 };
@@ -216,3 +218,10 @@ export const getUserFavorites = async () => {
         return [];
     }
 };
+
+export const loadUserFavorites = async (dispatch) => {
+    const data = await getUserFavorites();
+    if (data && Array.isArray(data)) {
+        dispatch({ type: "set_fav_spots", payload: data });
+    }
+}

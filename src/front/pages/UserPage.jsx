@@ -2,7 +2,8 @@ import { useEffect, useState } from "react"
 import useGlobalReducer from "../hooks/useGlobalReducer"
 import { WelcomeModal } from "../components/Welcomemodal";
 import { getUserBookings, cancelBooking } from "../services/bookingServices"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
+import { loadUserFavorites, toggleFavorite } from "../services/spotServices"
 import "./UserPage.css"
 
 
@@ -12,14 +13,26 @@ export const UserPage = () => {
     const [showEditModal, setShowEditModal] = useState(false)
     const [bookingToCancel, setBookingToCancel] = useState(null)
     const [cancelling, setCancelling] = useState(false)
+    const navigate = useNavigate();
 
-    const favSpots = store.user?.fav_spots || [];
+    const favSpots = store.fav_spots || [];
     const reservas = store.booking || [];
+
+    const handleRemoveFavorite = async (spotId) => {
+        await toggleFavorite(spotId, true);
+        loadUserFavorites(dispatch);
+    }
 
     useEffect(() => {
         if (!store.user?.id) return
         getUserBookings(store.user.id, dispatch)
     }, [store.user?.id])
+
+    useEffect(() => {
+        if (!store.token) return;
+        loadUserFavorites(dispatch);
+    }, [store.token]);
+
 
     const handleConfirmCancel = async () => {
         if (!bookingToCancel) return;
@@ -92,8 +105,6 @@ export const UserPage = () => {
                                     {reservas.length > 0 ? reservas.map(res => (
                                         <div className="userpage-card reserva" key={res.booking_id}>
                                             <div className="row g-0 align-items-center">
-
-                                                {/* 👇 Imagen con padding */}
                                                 <div className="col-4 userpage-card-img-wrapper">
                                                     <img
                                                         src={res.van_img || "https://via.placeholder.com/150"}
@@ -115,13 +126,12 @@ export const UserPage = () => {
                                                     </p>
                                                     <div className="d-flex justify-content-between align-items-center">
                                                         <span className={`badge rounded-pill border ${res.status === "confirmed" ? "bg-success-subtle text-success border-success-subtle" :
-                                                                res.status === "cancelled" ? "bg-danger-subtle text-danger border-danger-subtle" :
-                                                                    "bg-warning-subtle text-warning border-warning-subtle"
+                                                            res.status === "cancelled" ? "bg-danger-subtle text-danger border-danger-subtle" :
+                                                                "bg-warning-subtle text-warning border-warning-subtle"
                                                             }`}>
                                                             {res.status}
                                                         </span>
                                                         <div className="d-flex gap-2">
-                                                            {/* 👇 Botón ver detalle */}
                                                             <Link
                                                                 to={`/vans/${res.car_id}`}
                                                                 className="userpage-detail-btn"
@@ -176,27 +186,39 @@ export const UserPage = () => {
                                                         <span className="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill">
                                                             ⭐ {spot.rating || "Sin rating"}
                                                         </span>
-                                                        <button className="btn btn-sm btn-outline-danger rounded-pill">Ver</button>
-                                                    </div>
+                                                        <button
+                                                            className="btn btn-sm btn-outline-success rounded-pill"
+                                                            onClick={() => navigate("/map", { state: { openSpotId: `db-${spot.spot_id}` } })}
+                                                        >
+                                                            <i className="fa-solid fa-map-location-dot me-1"></i>
+                                                            Ver
+                                                        </button>
+                                                        <button
+                                                            className="btn btn-sm btn-outline-danger rounded-pill"
+                                                            onClick={() => handleRemoveFavorite(spot.spot_id)}
+                                                        >
+                                                            <i className="fa-solid fa-heart-crack me-1"></i>
+                                                            Quitar
+                                                        </button>
                                                 </div>
                                             </div>
                                         </div>
-                                    )) : (
-                                        <div className="userpage-empty favoritos">
-                                            <i className="fa-solid fa-heart-crack fa-2x mb-3 d-block opacity-25"></i>
-                                            No tienes favoritos guardados todavía.
                                         </div>
-                                    )}
+                                )) : (
+                                <div className="userpage-empty favoritos">
+                                    <i className="fa-solid fa-heart-crack fa-2x mb-3 d-block opacity-25"></i>
+                                    No tienes favoritos guardados todavía.
                                 </div>
+                                    )}
                             </div>
-
                         </div>
+
                     </div>
                 </div>
             </div>
+        </div >
 
-            {/* ── MODAL CANCELAR — sin createPortal ── */}
-            {bookingToCancel && (
+            { bookingToCancel && (
                 <div className="userpage-modal-overlay">
                     <div className="userpage-modal-box">
                         <div className="userpage-modal-header">
@@ -229,12 +251,13 @@ export const UserPage = () => {
                         </div>
                     </div>
                 </div>
-            )}
+            )
+}
 
-            <WelcomeModal
-                show={showEditModal}
-                onClose={() => setShowEditModal(false)}
-            />
+<WelcomeModal
+    show={showEditModal}
+    onClose={() => setShowEditModal(false)}
+/>
         </>
     );
 };
