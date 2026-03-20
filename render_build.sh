@@ -8,3 +8,6 @@ pip install pipenv
 pipenv install
 
 pipenv run upgrade
+
+pipenv run python src/seed_campers.py
+pipenv run python src/seed_vans.py

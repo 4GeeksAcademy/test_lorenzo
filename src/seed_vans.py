@@ -38,33 +38,44 @@ def setup_seed():
             }
         ]
 
+        vans_added = 0
         for item in vans_data:
-            new_v = Vehicle(
-                brand=item["brand"],
-                model=item["model"],
-                description=item["description"],
-                capacity=item["capacity"],
-                type_vehicle=item["type_vehicle"],
-                price_per_day=item["price_per_day"],
-                available=item["available"]
-            )
-            db.session.add(new_v)
-            db.session.flush() 
+            exists = Vehicle.query.filter_by(brand=item["brand"], model=item["model"]).first()
 
-            for img_url in item["media"]:
-                new_media = Media_vehicle(
-                    car_id=new_v.car_id,
-                    url_vehicle=img_url,
-                    media_type="image"
+            if not exists:
+
+                new_v = Vehicle(
+                    brand=item["brand"],
+                    model=item["model"],
+                    description=item["description"],
+                    capacity=item["capacity"],
+                    type_vehicle=item["type_vehicle"],
+                    price_per_day=item["price_per_day"],
+                    available=item["available"]
                 )
-                db.session.add(new_media)
+                db.session.add(new_v)
+                db.session.flush()
+
+                for img_url in item["media"]:
+                    new_media = Media_vehicle(
+                        car_id=new_v.car_id,
+                        url_vehicle=img_url,
+                        media_type="image"
+                    )
+                    db.session.add(new_media)
+
+                vans_added += 1
+                print(f"Añadida: {item['brand']} {item['model']}")
+            else:
+                print(f"Saltada (ya existe): {item['brand']} {item['model']}")
 
         try:
             db.session.commit()
-            print("¡Base de datos poblada con éxito!")
+            print(f"¡Proceso finalizado! Se añadieron {vans_added} furgonetas nuevas.")
         except Exception as e:
             db.session.rollback()
             print(f"Error al poblar la base de datos: {e}")
 
 if __name__ == "__main__":
+
     setup_seed()
