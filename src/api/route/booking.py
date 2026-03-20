@@ -115,7 +115,10 @@ def get_all_bookings():
 @booking.route('/user/<int:user_id>', methods=['GET'])
 @jwt_required()
 def get_user_bookings(user_id):
-    user_bookings = Booking.query.filter_by(user_id=user_id).all()
+    user_bookings = Booking.query.filter(
+        Booking.user_id == user_id,
+        Booking.status != "cancelled"
+    ).all()
 
     if not user_bookings:
         return jsonify({"msg": "Este usuario no tiene reservas aún", "bookings": []}), 200

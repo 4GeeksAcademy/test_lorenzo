@@ -4,39 +4,45 @@ export const initialStore = () => {
     vans: [],
     booking: [],
     token: localStorage.getItem("token") || null,
-    user: [],
+    user: null,
     spot: [],
+    fav_vans: [],
     fav_spots: [],
-    authReady: false
-
-  }
-}
+    authReady: false,
+  };
+};
 
 export default function storeReducer(store, action = {}) {
   switch (action.type) {
-    case 'set_hello':
+    case "set_hello":
       return {
         ...store,
-        message: action.payload
+        message: action.payload,
       };
 
     case "set_vans":
       return {
         ...store,
-        vans: action.payload
+        vans: action.payload,
       };
 
-    case "set_fav_spots":
+    case "fav_vans":
       return {
         ...store,
-        fav_spots: action.payload
+        fav_vans: action.payload,
       };
 
     case "set_spot":
       return {
         ...store,
-        spot: action.payload
-      }
+        spot: action.payload,
+      };
+
+    case "set_bookings":
+      return {
+        ...store,
+        booking: action.payload,
+      };
 
     case "set_booking":
       return {
@@ -47,8 +53,8 @@ export default function storeReducer(store, action = {}) {
     case "add_booking":
       return {
         ...store,
-        booking: [...store.booking, action.payload]
-      }
+        booking: [...(store.booking || []), action.payload]
+      };
 
     case "auth_login": {
       const { token } = action.payload;
@@ -64,9 +70,19 @@ export default function storeReducer(store, action = {}) {
 
       return { ...store, token: null, user: null, authReady: true };
 
-    default:
+    case "set_fav_spots":
+      return {
+        ...store,
+        fav_spots: action.payload,
+      };
 
-      throw Error('Unknown action.');
+    case "cancel_booking":
+  return {
+    ...store,
+    booking: store.booking.filter(b => b.booking_id !== action.payload)
+  }
+
+    default:
+      return store;
   }
 }
-

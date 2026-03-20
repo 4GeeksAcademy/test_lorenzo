@@ -57,8 +57,7 @@ class User(db.Model):
             "last_name": self.last_name,
             "phone": self.phone,
             "address": self.address,
-            # "is_active": self.is_active
-            # do not serialize the password, its a security breach
+            "fav_spots": [spot.serialize() for spot in self.fav_spot]
         }
 
 

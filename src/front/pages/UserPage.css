@@ -1,0 +1,220 @@
+.userpage-wrapper {
+    width: 100vw;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+.userpage-hero {
+    background-image: linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.35)),
+        url("https://i.imgur.com/l3Bb92y.jpeg");
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    padding: 60px 1rem 80px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.userpage-profile-card {
+    background: rgba(255, 255, 255, 0.97);
+    border-radius: 20px;
+    padding: 2.5rem 2rem;
+    width: 90%;
+    max-width: 800px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.userpage-avatar {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    background: #2d6a4f;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    box-shadow: 0 4px 20px rgba(45, 106, 79, 0.3);
+}
+
+.userpage-username {
+    font-weight: 700;
+    color: #1b2e22;
+    margin-bottom: 0.5rem;
+}
+
+.userpage-info-item {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+}
+
+.userpage-edit-btn {
+    background: transparent;
+    border: 1.5px solid #2d6a4f;
+    color: #2d6a4f;
+    border-radius: 999px;
+    padding: 0.5rem 1.4rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.userpage-edit-btn:hover {
+    background: #f0f7f2;
+    border-color: #52b788;
+}
+
+.userpage-content {
+    background: #fff;
+    padding: 3rem 1rem 4rem;
+}
+
+.userpage-content-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.userpage-section-title {
+    font-weight: 700;
+    color: #1b2e22;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.25rem;
+    font-size: 1.2rem;
+}
+
+.userpage-section-title.reservas {
+    border-bottom: 2px solid #c8e6c9;
+}
+
+.userpage-section-title.favoritos {
+    border-bottom: 2px solid #c8e6c9;
+}
+
+.userpage-card {
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+    background: #fff;
+}
+
+.userpage-card.reserva {
+    border: 0.5px solid #e8f5e9;
+}
+
+.userpage-card.favorito {
+    border: 0.5px solid #e8f5e9;
+}
+
+.userpage-card-img-wrapper {
+    padding: 10px;
+}
+
+.userpage-card-img-wrapper img {
+    border-radius: 12px;
+    object-fit: cover;
+    min-height: 170px;
+    height: 100%;
+    width: 100%;
+}
+
+.userpage-card-body {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; 
+    min-height: 170px;   
+}
+
+.userpage-card-title {
+    font-weight: 700;
+    color: #1b2e22;
+    margin-bottom: 8px;
+    font-size: 1rem;
+}
+
+.userpage-card-info {
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin-bottom: 6px;
+}
+
+.userpage-empty {
+    text-align: center;
+    padding: 4rem 1rem;
+    border-radius: 16px;
+    color: #adb5bd;
+}
+
+.userpage-empty.reservas {
+    border: 0.5px solid #e8f5e9;
+    background: #fafffe;
+}
+
+.userpage-empty.favoritos {
+    border: 0.5px solid #e8f5e9;
+    background: #fafffe;
+}
+
+.userpage-detail-btn {
+    background: transparent;
+    border: 1.5px solid #2d6a4f;
+    color: #2d6a4f;
+    border-radius: 999px;
+    padding: 0.35rem 1rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+
+.userpage-detail-btn:hover {
+    background: #f0f7f2;
+    border-color: #52b788;
+    color: #1b4332;
+}
+
+.userpage-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.userpage-modal-box {
+    background: #fff;
+    border-radius: 20px;
+    width: 90%;
+    max-width: 460px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+}
+
+.userpage-modal-header {
+    padding: 1.5rem 1.5rem 0;
+    border: none;
+}
+
+.userpage-modal-body {
+    padding: 1rem 1.5rem;
+    color: #6c757d;
+}
+
+.userpage-modal-footer {
+    padding: 0 1.5rem 1.5rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    border: none;
+}

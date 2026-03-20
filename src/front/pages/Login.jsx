@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react"
 import useGlobalReducer from "../hooks/useGlobalReducer.jsx";
-import { login} from "../services/loginServices.js";
-import { useNavigate } from "react-router-dom";
+import { login } from "../services/loginServices.js";
+import { useNavigate, Link } from "react-router-dom";
+import "./Signup.css";
 
 
 export const Login = () => {
@@ -35,7 +36,7 @@ export const Login = () => {
             setError("Por favor, completa todos los campos.");
             return;
         }
-        
+
         setLoading(true);
 
         const response = await login(user)
@@ -49,88 +50,98 @@ export const Login = () => {
 
         localStorage.setItem("token", response.token);
         dispatch({ type: "auth_login", payload: { token: response.token } });
-        dispatch({type: "auth_set_user", payload:response.user});
+        dispatch({ type: "auth_set_user", payload: response.user });
 
         setLoading(false)
         navigate("/")
 
-    } 
-
-
+    }
 
     return (
-        <div className="container py-5" >
-            <div className="row justify-content-center">
-                <div className="col-12 col-sm-10 col-md-10 col-lg-5">
-                    <h1 className="text-center">Ingresa a tu cuenta</h1>
+        <div className="signup-page">
+            <div className="signup-card">
+                <h1 className="signup-title">
+                    <i className="fa-solid fa-van-shuttle me-2 text-success"></i>
+                    Bienvenido de vuelta
+                </h1>
+                <p className="signup-subtitle">Ingresa a tu cuenta camper</p>
 
-                    {error && <div className="alert alert-danger" role="alert">{error}</div>}
-                    <form onSubmit={handleSubmit}>
-                        <div className="mb-3">
-                            <label htmlFor="exampleInputEmail1" className="form-label">Correo electronico</label>
-                            <div className="input-group">
-                                <span className="input-group-text">
-                                    <i className="fa-solid fa-envelope"></i>
-                                </span>
-                                <input type="email" className="form-control"
-                                    id="exampleInputEmail1"
-                                    aria-describedby="emailHelp"
-                                    name="email"
-                                    value={user.email}
-                                    onChange={handleChange}
-                                    required>
-                                </input>
-                            </div>
-                            <div id="emailHelp" className="form-text">Nunca compartiremos tu correo electrónico con nadie más.</div>
+                {error && (
+                    <div className="alert alert-danger py-2 small" role="alert">
+                        <i className="fa-solid fa-circle-exclamation me-2"></i>
+                        {error}
+                    </div>
+                )}
 
+                <form onSubmit={handleSubmit}>
+                    <div className="mb-3">
+                        <label className="form-label signup-label">Correo electrónico</label>
+                        <div className="input-group signup-input-group">
+                            <span className="input-group-text">
+                                <i className="fa-solid fa-envelope"></i>
+                            </span>
+                            <input
+                                type="email"
+                                className="form-control"
+                                name="email"
+                                value={user.email}
+                                onChange={handleChange}
+                                placeholder="tu@email.com"
+                                required
+                            />
                         </div>
-                        <div className="mb-3">
-                            <label htmlFor="exampleInputPassword1" className="form-label">Contraseña</label>
-                            <div className="input-group">
-                                <span className="input-group-text">
-                                    <i className="fa-solid fa-lock" />
-                                </span>
-                                <input type={showPassword ? "text" : "password"}
-                                    className="form-control"
-                                    placeholder="••••••••"
-                                    id="exampleInputPassword1"
-                                    name="password"
-                                    value={user.password}
-                                    onChange={handleChange}
-                                    required>
-                                </input>
-                                <button
-                                    type="button"
-                                    className="btn btn-outline-secondary"
-                                    onClick={() => setShowPassword((s) => !s)}>
-                                    <i className={`fa-solid ${showPassword ? "fa-eye-slash" : "fa-eye"}`} />
-                                </button>
-                            </div>
+                        <div className="signup-help-text mt-1">
+                            Nunca compartiremos tu correo con nadie más.
                         </div>
-                        <button
-                            type="submit"
-                            className="btn btn-primary w-100"
-                            disabled={loading}
-                        >
-                            {loading ? (
-                                <span className="d-inline-flex align-items-center gap-2">
-                                    <span
-                                        className="spinner-border spinner-border-sm"
-                                        role="status"
-                                        aria-hidden="true"
-                                    ></span>
-                                    Ingresando..
-                                </span>
-                            ) : (
-                                "Ingresar a tu cuenta"
-                            )}
-                        </button>
-                    </form>
+                    </div>
+                    <div className="mb-4">
+                        <label className="form-label signup-label">Contraseña</label>
+                        <div className="input-group signup-input-group">
+                            <span className="input-group-text">
+                                <i className="fa-solid fa-lock" />
+                            </span>
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                className="form-control"
+                                placeholder="••••••••"
+                                name="password"
+                                value={user.password}
+                                onChange={handleChange}
+                                required
+                            />
+                            <button
+                                type="button"
+                                className="btn btn-outline-secondary"
+                                onClick={() => setShowPassword(s => !s)}
+                            >
+                                <i className={`fa-solid ${showPassword ? "fa-eye-slash" : "fa-eye"}`} />
+                            </button>
+                        </div>
+                    </div>
+                    <button
+                        type="submit"
+                        className="btn btn-success w-100 signup-btn"
+                        disabled={loading}
+                    >
+                        {loading ? (
+                            <span className="d-inline-flex align-items-center gap-2">
+                                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                Ingresando...
+                            </span>
+                        ) : (
+                            <>
+                                <i className="fa-solid fa-right-to-bracket me-2"></i>
+                                Ingresar
+                            </>
+                        )}
+                    </button>
 
+                </form>
+                <div className="signup-login-link">
+                    ¿No tienes cuenta? <Link to="/signup">Regístrate gratis</Link>
                 </div>
 
             </div>
-
-        </div >
+        </div>
     );
 }
