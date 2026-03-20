@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { useParams } from "react-router-dom"
+import { useNavigate, useParams } from "react-router-dom"
 import useGlobalReducer from "../hooks/useGlobalReducer"
 import { getSingleVan } from "../services/vanServices"
 import DatePicker from "react-datepicker";
@@ -11,6 +11,7 @@ import { login } from "../services/loginServices";
 export const DetailsVan = () => {
 
     const { id } = useParams()
+    const navigate = useNavigate();
     const { store, dispatch } = useGlobalReducer()
     const [van, setVan] = useState()
     const [startDate, setStartDate] = useState(null);
@@ -47,8 +48,8 @@ export const DetailsVan = () => {
         const bookingData = {
             car_id: id,
             user_id: store.user.id,
-            start_date: format(startDate, "yyyy-MM-dd"),
-            end_date: format(endDate, "yyyy-MM-dd"),
+            start_date: format(startDate, "dd-MM-yyyy"),
+            end_date: format(endDate, "dd-MM-yyyy"),
             total_price: bookingTotal,
             status: "confirmed"
         };
@@ -58,6 +59,7 @@ export const DetailsVan = () => {
             setStartDate(null)
             setEndDate(null)
             getVan()
+            navigate("/user")
         }
     }
 
@@ -67,15 +69,6 @@ export const DetailsVan = () => {
         setEndDate(end);
     };
 
-    // const handleFavVan = () => {
-    //     const isFav = store.fav_vans.find(fav => fav.id === van.id);
-    //     if (isFav) {
-    //         const updatedFavs = store.fav_vans.filter(fav => fav.id !== van.id);
-    //         dispatch({ type: 'fav_vans', payload: updatedFavs });
-    //     } else {
-    //         dispatch({ type: 'fav_vans', payload: [...store.fav_vans, van] });
-    //     }
-    // };
     const handleChangeForm = (e) => {
         setUser({
             ...user,
@@ -95,7 +88,6 @@ export const DetailsVan = () => {
             dispatch({ type: "auth_login", payload: { token: response.token } });
             dispatch({ type: "auth_set_user", payload: response.user });
             
-            // Cierre sencillo haciendo clic en la X
             const closeButton = document.querySelector("#modalLoginAviso .btn-close");
             if (closeButton) closeButton.click();
         } else {

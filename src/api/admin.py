@@ -16,3 +16,9 @@ def setup_admin(app):
         # Verify that the object is a SQLAlchemy model before adding it to the admin. 
         if inspect.isclass(obj) and issubclass(obj, db.Model):
             admin.add_view(ModelView(obj, db.session))
+
+class PostSpotView(ModelView):
+    column_list = ('spot_id', 'name', 'category', 'city', 'latitude', 'longitude')
+    column_searchable_list = ['name', 'spot_id'] 
+    column_filters = ['category', 'city']
+    form_columns = ('name', 'category', 'address', 'description', 'latitude', 'longitude', 'has_water', 'has_waste_dump', 'has_electricity', 'is_sleepable')
